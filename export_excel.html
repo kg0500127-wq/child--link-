@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تصدير بيانات Child Link</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  }
+  .logo { font-size: 50px; margin-bottom: 15px; }
+  h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
+  p { color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 14px; }
+  .btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.3s;
+    font-family: inherit;
+  }
+  .btn-missing {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+  }
+  .btn-found {
+    background: linear-gradient(135deg, #27ae60, #219a52);
+    color: white;
+  }
+  .btn-all {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .status {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+  .status.show { display: block; }
+  .status.loading { background: rgba(255,200,0,0.2); color: #ffd700; }
+  .status.success { background: rgba(39,174,96,0.2); color: #2ecc71; }
+  .status.error { background: rgba(231,76,60,0.2); color: #e74c3c; }
+  .count { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 15px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">📊</div>
+  <h1>تصدير بيانات Child Link</h1>
+  <p>اختار نوع البيانات اللي عايز تحملها Excel</p>
+
+  <button class="btn btn-missing" onclick="exportData('missing_children', 'أطفال مفقودون')">
+    🔴 تحميل بيانات الأطفال المفقودين
+  </button>
+  <button class="btn btn-found" onclick="exportData('found_children', 'أطفال تم العثور عليهم')">
+    🟢 تحميل بيانات الأطفال الموجودين
+  </button>
+  <button class="btn btn-all" onclick="exportAll()">
+    🔵 تحميل كل البيانات (ملف واحد)
+  </button>
+
+  <div class="status" id="status"></div>
+  <div class="count" id="count"></div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
+  authDomain: "child-link-ac4ac.firebaseapp.com",
+  projectId: "child-link-ac4ac",
+  storageBucket: "child-link-ac4ac.firebasestorage.app",
+  messagingSenderId: "79812028626",
+  appId: "1:79812028626:web:0c845a491c9d250282e50b"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function showStatus(msg, type) {
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status show ' + type;
+}
+
+function setCount(msg) {
+  document.getElementById('count').textContent = msg;
+}
+
+function disableBtns(val) {
+  document.querySelectorAll('.btn').forEach(b => b.disabled = val);
+}
+
+async function fetchCollection(name) {
+  const snap = await db.collection(name).get();
+  return snap.docs.map(doc => {
+    const d = doc.data();
+    return {
+      'المعرف': doc.id,
+      'الاسم': d.name || '',
+      'العمر': d.age || '',
+      'الجنس': d.gender || '',
+      'المنطقة': d.area || '',
+      'الوصف': d.description || '',
+      'ولي الأمر': d.guardian || '',
+      'رقم الهاتف': d.phone || '',
+      'الإيميل': d.email || '',
+      'الحالة الصحية': d.health || '',
+      'ملابس الطفل': d.child_with || '',
+      'مكان الاكتشاف': d.found_location || '',
+      'تاريخ الإبلاغ': d.created_at || '',
+      'تاريخ الاكتشاف': d.found_at || '',
+      'رابط الصورة': d.image_url || '',
+    };
+  });
+}
+
+async function exportData(collection, sheetName) {
+  disableBtns(true);
+  showStatus('⏳ جاري تحميل البيانات...', 'loading');
+  try {
+    const data = await fetchCollection(collection);
+    setCount(`✅ تم جلب ${data.length} سجل`);
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    // Auto column width
+    const cols = Object.keys(data[0] || {}).map(k => ({ wch: Math.max(k.length, 20) }));
+    ws['!cols'] = cols;
+    XLSX.writeFile(wb, `child_link_${collection}_${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.xlsx`);
+    showStatus('✅ تم التحميل بنجاح!', 'success');
+  } catch(e) {
+    showStatus('❌ خطأ: ' + e.message, 'error');
+  }
+  disableBtns(false);
+}
+
+async function exportAll() {
+  disableBtns(true);
+  showStatus('⏳ جاري تحميل كل البيانات...', 'loading');
+  try {
+    const missing = await fetchCollection('missing_children');
+    const found = await fetchCollection('found_children');
+    setCount(`✅ مفقودين: ${missing.length} | موجودين: ${found.length}`);
+    const wb = XLSX.utils.book_new();
+    const ws1 = XLSX.utils.json_to_sheet(missing);
+    const ws2 = XLSX.utils.json_to_sheet(found);
+    XLSX.utils.book_append_sheet(wb, ws1, 'أطفال مفقودون');
+    XLSX.utils.book_append_sheet(wb, ws2, 'أطفال تم العثور عليهم');
+    XLSX.writeFile(wb, `child_link_all_${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.xlsx`);
+    showStatus('✅ تم التحميل بنجاح!', 'success');
+  } catch(e) {
+    showStatus('❌ خطأ: ' + e.message, 'error');
+  }
+  disableBtns(false);
+}
+</script>
+</body>
+</html>
