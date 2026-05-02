@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -418,14 +419,15 @@ function toWord(rows, title, file){
   const thead = keys.map(k =>
     `<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`
   ).join('');
-  const tbody = rows.map(r =>
-    `<tr>${keys.map(k => {
+  const colW = Math.floor(9000 / keys.length); // عرض تلقائي للأعمدة
+  const tbody = rows.map((r, ri) =>
+    `<tr style="background:${ri%2===0?'white':'#f0fff4'};">${keys.map(k => {
       const val = r[k] || '';
       if(k === 'رابط الصورة' && val)
-        return `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">
+        return `<td style="padding:7px 10px;border:1px solid #ddd;text-align:right;word-break:break-all;width:${colW}px;">
           <a href="${val}" target="_blank" style="color:#1a6b2a;font-weight:bold;">🖼 فتح الصورة</a>
         </td>`;
-      return `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${val}</td>`;
+      return `<td style="padding:7px 10px;border:1px solid #ccc;text-align:right;word-break:break-word;width:${colW}px;">${val}</td>`;
     }).join('')}</tr>`
   ).join('');
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -448,43 +450,60 @@ function toWord(rows, title, file){
   a.click();
 }
 
-// ✅ FIX 2: PDF — رابط الصورة يتحول لـ "فتح الصورة" قابل للضغط
-function toPDF(rows, title, file){
+// ✅ FIX PDF: html2canvas — يصوّر الجدول كصورة فتطلع العربية صح 100%
+async function toPDF(rows, title, file){
   if(!rows.length) return;
-  const {jsPDF} = window.jspdf;
-  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
   const keys = Object.keys(rows[0]);
+
+  // بناء HTML مؤقت للجدول
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;direction:rtl;font-family:Cairo,Arial,sans-serif;background:#fff;padding:20px;width:1100px;';
+
   const urlColIdx = keys.indexOf('رابط الصورة');
-  const pw = doc.internal.pageSize.getWidth();
-  doc.setFillColor(26,107,42); doc.rect(0,0,pw,20,'F');
-  doc.setTextColor(255,240,150); doc.setFontSize(13);
-  doc.text(`Child Link — ${title}`, pw/2, 13, {align:'center'});
-  doc.setTextColor(200,180,80); doc.setFontSize(7.5);
-  doc.text('معاً نبني حياة أفضل لكل طفل', pw/2, 18.5, {align:'center'});
-  doc.autoTable({
-    head: [keys],
-    body: rows.map(r => keys.map((k, ci) => {
-      if(ci === urlColIdx && r[k]) return '🖼 فتح الصورة';
-      return String(r[k]||'');
-    })),
-    startY: 24,
-    styles: {fontSize:7, halign:'right', cellPadding:3},
-    headStyles: {fillColor:[26,107,42], textColor:[200,255,200], fontStyle:'bold'},
-    alternateRowStyles: {fillColor:[240,255,244]},
-    margin: {right:10, left:10},
-    didParseCell: (data) => {
-      if(data.column.index === urlColIdx && data.section === 'body'){
-        const url = rows[data.row.index]?.['رابط الصورة'];
-        if(url) data.cell.styles.textColor = [0, 100, 200];
-      }
-    },
-    didDrawCell: (data) => {
-      if(data.column.index === urlColIdx && data.section === 'body'){
-        const url = rows[data.row.index]?.['رابط الصورة'];
-        if(url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, {url});
-      }
-    }
-  });
+
+  const thead = keys.map(k =>
+    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #a0c080;font-size:12px;white-space:nowrap;">${k}</th>`
+  ).join('');
+
+  const tbody = rows.map((r, ri) =>
+    `<tr style="background:${ri%2===0?'#fff':'#f0fff4'};">
+      ${keys.map((k, ci) => {
+        const val = r[k] || '';
+        if(ci === urlColIdx && val)
+          return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;"><a href="${val}" style="color:#1a6b2a;font-weight:bold;">🖼 فتح الصورة</a></td>`;
+        return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;max-width:120px;word-break:break-word;">${val}</td>`;
+      }).join('')}
+    </tr>`
+  ).join('');
+
+  wrapper.innerHTML = `
+    <div style="background:#1a6b2a;color:#fff3a0;padding:12px;text-align:center;border-radius:8px 8px 0 0;margin-bottom:0;">
+      <div style="font-size:18px;font-weight:900;">Child Link — ${title}</div>
+      <div style="font-size:11px;color:#c8e6c9;margin-top:4px;">معاً نبني حياة أفضل لكل طفل</div>
+    </div>
+    <table style="border-collapse:collapse;width:100%;direction:rtl;">
+      <thead><tr>${thead}</tr></thead>
+      <tbody>${tbody}</tbody>
+    </table>`;
+
+  document.body.appendChild(wrapper);
+
+  // تحميل خط Cairo
+  await document.fonts.ready;
+
+  const canvas = await html2canvas(wrapper, {scale:2, useCORS:true, backgroundColor:'#fff'});
+  document.body.removeChild(wrapper);
+
+  const {jsPDF} = window.jspdf;
+  const imgData = canvas.toDataURL('image/jpeg', 0.95);
+  const imgW = canvas.width, imgH = canvas.height;
+
+  // حجم الصفحة يتكيّف مع عرض الجدول
+  const pageW = Math.max(297, imgW/2 * 0.264583); // mm
+  const pageH = imgH/2 * 0.264583 + 10;
+
+  const doc = new jsPDF({orientation: pageW > pageH ? 'landscape':'portrait', unit:'mm', format:[pageW, pageH]});
+  doc.addImage(imgData,'JPEG', 0, 5, pageW, pageH - 5);
   doc.save(file + '.pdf');
 }
 
@@ -511,8 +530,8 @@ window.doExport = async function(){
         toWord(m, 'الأطفال المفقودين', 'child_link_missing');
         setTimeout(() => toWord(f, 'الأطفال المعثور عليهم', 'child_link_found'), 700);
       } else {
-        toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
-        setTimeout(() => toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found'), 700);
+        await toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
+        await toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found');
       }
     } else {
       const rows = await fetchCol(type);
@@ -522,7 +541,7 @@ window.doExport = async function(){
       const file   = `child_link_${type}`;
       if(fmt === 'excel')     toExcel(rows, isMiss ? 'مفقودون' : 'معثور عليهم', file);
       else if(fmt === 'word') toWord(rows, title, file);
-      else                    toPDF(rows, title, file);
+      else                    await toPDF(rows, title, file);
     }
     showStatus('✅ تم التحميل بنجاح!', 'success');
   } catch(e){
