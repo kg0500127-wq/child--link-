@@ -11,7 +11,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
   --gold:   #f5c842;
   --green:  #00e676;
@@ -19,7 +18,6 @@
   --bg:     #040d06;
   --border: rgba(245,200,66,0.35);
 }
-
 body {
   font-family: 'Cairo', sans-serif;
   min-height: 100vh; background: var(--bg);
@@ -27,158 +25,73 @@ body {
   padding: 24px; overflow: hidden; position: relative;
 }
 canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
-
 .card {
   position: relative; z-index: 10;
   max-width: 460px; width: 100%;
   text-align: center;
-  background:
-    linear-gradient(145deg,
-      rgba(0,230,118,0.04) 0%,
-      rgba(255,255,255,0.02) 40%,
-      rgba(0,180,80,0.03) 100%),
-    rgba(6,20,10,0.78);
+  background: linear-gradient(145deg, rgba(0,230,118,0.04) 0%, rgba(255,255,255,0.02) 40%, rgba(0,180,80,0.03) 100%), rgba(6,20,10,0.78);
   backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
   -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
   border-radius: 28px;
   padding: 38px 34px 34px;
   border: 1.5px solid rgba(245,200,66,0.30);
-  box-shadow:
-    0 0 0 1px rgba(245,200,66,0.06),
-    0 0 50px rgba(245,200,66,0.05),
-    0 0 25px rgba(0,230,118,0.04),
-    0 32px 70px rgba(0,0,0,0.68),
-    inset 0 1.5px 0 rgba(245,220,100,0.10),
-    inset 0 -1px 0 rgba(0,0,0,0.20);
+  box-shadow: 0 0 0 1px rgba(245,200,66,0.06), 0 0 50px rgba(245,200,66,0.05), 0 0 25px rgba(0,230,118,0.04), 0 32px 70px rgba(0,0,0,0.68), inset 0 1.5px 0 rgba(245,220,100,0.10), inset 0 -1px 0 rgba(0,0,0,0.20);
 }
-
 .card::before {
-  content: '';
-  position: absolute; inset: 0;
+  content: ''; position: absolute; inset: 0;
   border-radius: 28px;
-  background: linear-gradient(135deg,
-    rgba(245,200,66,0.05) 0%,
-    rgba(0,230,118,0.03) 50%,
-    transparent 100%);
+  background: linear-gradient(135deg, rgba(245,200,66,0.05) 0%, rgba(0,230,118,0.03) 50%, transparent 100%);
   pointer-events: none;
 }
-
-.site-name {
-  font-size: 30px; font-weight: 900;
-  letter-spacing: 1px; margin-bottom: 6px;
-}
+.site-name { font-size: 30px; font-weight: 900; letter-spacing: 1px; margin-bottom: 6px; }
 .site-name .part-green { color: var(--green); filter: drop-shadow(0 0 12px rgba(0,230,118,0.45)); }
 .site-name .part-gold  { color: var(--gold);  filter: drop-shadow(0 0 12px rgba(245,200,66,0.40)); }
-
-.site-tagline {
-  font-size: 12.5px; letter-spacing: 0.5px;
-  color: rgba(100,200,120,0.50);
-  margin-bottom: 24px;
-}
-
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(245,200,66,0.45), transparent);
-  margin: 0 0 24px;
-}
-
-.section-label {
-  font-size: 11px; letter-spacing: 1.8px;
-  color: rgba(120,200,130,0.40);
-  margin-bottom: 11px;
-}
-
-.type-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 9px; margin-bottom: 22px;
-}
+.site-tagline { font-size: 12.5px; letter-spacing: 0.5px; color: rgba(100,200,120,0.50); margin-bottom: 24px; }
+.divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(245,200,66,0.45), transparent); margin: 0 0 24px; }
+.section-label { font-size: 11px; letter-spacing: 1.8px; color: rgba(120,200,130,0.40); margin-bottom: 11px; }
+.type-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 22px; }
 .type-btn {
   padding: 13px 6px; border-radius: 13px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.03);
-  color: rgba(200,220,200,0.45);
-  font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+  border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);
+  color: rgba(200,220,200,0.45); font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
   display: flex; flex-direction: column; align-items: center; gap: 7px;
 }
 .type-btn .icon { font-size: 20px; }
-.type-btn:hover {
-  background: rgba(0,230,118,0.07);
-  border-color: rgba(0,230,118,0.25);
-  color: #ccc; transform: translateY(-2px);
-}
-.type-btn.active-missing {
-  background: rgba(192,57,43,0.18); border-color: rgba(255,82,82,0.45);
-  color: #ffb3ae; box-shadow: 0 0 20px rgba(192,57,43,0.22);
-}
-.type-btn.active-found {
-  background: rgba(26,122,58,0.18); border-color: rgba(0,230,118,0.45);
-  color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18);
-}
-.type-btn.active-all {
-  background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.50);
-  color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18);
-}
-
-.format-grid {
-  display: grid; grid-template-columns: 1fr 1fr 1fr;
-  gap: 9px; margin-bottom: 24px;
-}
+.type-btn:hover { background: rgba(0,230,118,0.07); border-color: rgba(0,230,118,0.25); color: #ccc; transform: translateY(-2px); }
+.type-btn.active-missing { background: rgba(192,57,43,0.18); border-color: rgba(255,82,82,0.45); color: #ffb3ae; box-shadow: 0 0 20px rgba(192,57,43,0.22); }
+.type-btn.active-found   { background: rgba(26,122,58,0.18);  border-color: rgba(0,230,118,0.45); color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18); }
+.type-btn.active-all     { background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.50); color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18); }
+.format-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 24px; }
 .fmt-btn {
   padding: 13px 6px; border-radius: 13px;
-  border: 1px solid rgba(255,255,255,0.07);
-  background: rgba(255,255,255,0.03);
-  color: rgba(200,220,200,0.45);
-  font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+  border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03);
+  color: rgba(200,220,200,0.45); font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
   display: flex; flex-direction: column; align-items: center; gap: 7px;
 }
 .fmt-btn .icon { font-size: 22px; }
-.fmt-btn:hover {
-  background: rgba(0,230,118,0.06);
-  border-color: rgba(0,230,118,0.2);
-  color: #ccc; transform: translateY(-2px);
-}
-.fmt-btn[data-fmt="excel"].active {
-  background: rgba(20,130,60,0.18); border-color: rgba(0,230,118,0.50);
-  color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18);
-}
-.fmt-btn[data-fmt="word"].active {
-  background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.50);
-  color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18);
-}
-.fmt-btn[data-fmt="pdf"].active {
-  background: rgba(200,50,30,0.18); border-color: rgba(255,80,60,0.50);
-  color: #ffc0b8; box-shadow: 0 0 20px rgba(200,50,30,0.20);
-}
-
+.fmt-btn:hover { background: rgba(0,230,118,0.06); border-color: rgba(0,230,118,0.2); color: #ccc; transform: translateY(-2px); }
+.fmt-btn[data-fmt="excel"].active { background: rgba(20,130,60,0.18);   border-color: rgba(0,230,118,0.50); color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18); }
+.fmt-btn[data-fmt="word"].active  { background: rgba(245,200,66,0.16);  border-color: rgba(245,200,66,0.50); color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18); }
+.fmt-btn[data-fmt="pdf"].active   { background: rgba(200,50,30,0.18);   border-color: rgba(255,80,60,0.50);  color: #ffc0b8; box-shadow: 0 0 20px rgba(200,50,30,0.20); }
 .export-btn {
   width: 100%; padding: 16px; border-radius: 14px; border: none;
-  font-size: 16px; font-weight: 900; font-family: 'Cairo', sans-serif;
-  cursor: pointer;
-  background: linear-gradient(135deg, #00b851, #007a35);
-  color: #e0fff0;
+  font-size: 16px; font-weight: 900; font-family: 'Cairo', sans-serif; cursor: pointer;
+  background: linear-gradient(135deg, #00b851, #007a35); color: #e0fff0;
   border: 1px solid rgba(0,230,118,0.28);
   box-shadow: 0 8px 28px rgba(0,200,80,0.35), inset 0 1px 0 rgba(100,255,140,0.15);
-  position: relative; overflow: hidden;
-  transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+  position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
 }
 .export-btn::after {
-  content: ''; position: absolute;
-  top:-50%; left:-75%; width:50%; height:200%;
+  content: ''; position: absolute; top:-50%; left:-75%; width:50%; height:200%;
   background: linear-gradient(100deg, transparent, rgba(255,255,255,0.13), transparent);
   transform: skewX(-20deg); animation: shimmer 2.8s infinite;
 }
 @keyframes shimmer { 0%{left:-75%} 55%,100%{left:130%} }
-.export-btn:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 14px 38px rgba(0,200,80,0.50);
-}
-.export-btn:active  { transform: scale(0.97); }
+.export-btn:hover  { transform: translateY(-3px) scale(1.02); box-shadow: 0 14px 38px rgba(0,200,80,0.50); }
+.export-btn:active { transform: scale(0.97); }
 .export-btn:disabled { opacity:0.28; cursor:not-allowed; transform:none !important; }
-
 .status {
   margin-top:16px; padding:12px 16px; border-radius:12px;
   font-size:14px; font-weight:700; display:none; animation:fadeUp .3s ease;
@@ -272,15 +185,10 @@ function draw(){
   hexes.forEach(h=>{
     const p=Math.sin(t*h.speed+h.phase);
     let a,col,sc;
-    if(h.kind>.95){
-      a=.05+p*.04; col=`rgba(245,200,66,${a})`; sc=`rgba(245,200,66,${a*1.8})`;
-    } else if(h.kind>.88){
-      a=.04+p*.04; col=`rgba(0,230,118,${a})`; sc=`rgba(0,230,118,${a*1.8})`;
-    } else if(h.kind>.76){
-      a=.02+p*.015; col=`rgba(0,180,90,${a})`; sc=`rgba(0,180,90,${a*1.5})`;
-    } else {
-      a=.008+p*.005; col=`rgba(0,120,60,${a})`; sc=`rgba(0,120,60,${a*1.2})`;
-    }
+    if(h.kind>.95){a=.05+p*.04;col=`rgba(245,200,66,${a})`;sc=`rgba(245,200,66,${a*1.8})`;}
+    else if(h.kind>.88){a=.04+p*.04;col=`rgba(0,230,118,${a})`;sc=`rgba(0,230,118,${a*1.8})`;}
+    else if(h.kind>.76){a=.02+p*.015;col=`rgba(0,180,90,${a})`;sc=`rgba(0,180,90,${a*1.5})`;}
+    else{a=.008+p*.005;col=`rgba(0,120,60,${a})`;sc=`rgba(0,120,60,${a*1.2})`;}
     hexPath(h.x,h.y,HS-1.5);
     ctx.fillStyle=col;ctx.fill();
     ctx.strokeStyle=sc;ctx.lineWidth=.5;ctx.stroke();
@@ -303,7 +211,6 @@ function draw(){
 draw();
 </script>
 
-<!-- ✅ FIX: استخدام window بدل let عشان الـ module script يشوف المتغيرات -->
 <script>
 window.selectedType   = null;
 window.selectedFormat = null;
@@ -330,18 +237,17 @@ function checkReady(){
 }
 </script>
 
-<!-- Firebase + Export -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
-  apiKey: "AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
-  authDomain: "child-link-ac4ac.firebaseapp.com",
-  projectId: "child-link-ac4ac",
-  storageBucket: "child-link-ac4ac.firebasestorage.app",
-  messagingSenderId: "79812028626",
-  appId: "1:79812028626:web:0c845a491c9d250282e50b"
+  apiKey:"AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
+  authDomain:"child-link-ac4ac.firebaseapp.com",
+  projectId:"child-link-ac4ac",
+  storageBucket:"child-link-ac4ac.firebasestorage.app",
+  messagingSenderId:"79812028626",
+  appId:"1:79812028626:web:0c845a491c9d250282e50b"
 });
 const db = getFirestore(app);
 
@@ -352,327 +258,79 @@ function showStatus(msg, type){
 function disableAll(v){
   document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b => b.disabled = v);
 }
-
-// ✅ تحويل Timestamp لتاريخ مقروء
 function formatDate(val){
   if(!val) return '';
   if(typeof val.toDate === 'function')
-    return val.toDate().toLocaleDateString('ar-EG', {year:'numeric',month:'2-digit',day:'2-digit'});
+    return val.toDate().toLocaleDateString('ar-EG',{year:'numeric',month:'2-digit',day:'2-digit'});
   return String(val);
 }
 
-// ✅ جلب الصورة كـ base64 عشان تتضمّن في الملف
-async function toBase64(url){
-  if(!url) return null;
-  try{
-    const res = await fetch(url);
-    const blob = await res.blob();
-    return await new Promise((ok,err) => {
-      const r = new FileReader();
-      r.onload = () => ok(r.result);
-      r.onerror = err;
-      r.readAsDataURL(blob);
+// ══════════════════════════════════════════════════════════════
+// تحميل الصورة عبر fetch → blob URL
+// هذه الطريقة تتجاوز مشكلة CORS مع Firebase Storage
+// لأن fetch بيطلب الـ CORS headers بشكل صريح
+// ══════════════════════════════════════════════════════════════
+async function imgToBase64(url) {
+  if (!url) return null;
+  try {
+    // الطريقة الأولى: fetch مباشر (يشتغل لو Firebase Storage معمول عليه CORS صح)
+    const resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) throw new Error('fetch failed');
+    const blob = await resp.blob();
+    return await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload  = () => res(reader.result);
+      reader.onerror = () => rej(new Error('FileReader failed'));
+      reader.readAsDataURL(blob);
     });
-  } catch(e){ return null; }
+  } catch (e1) {
+    // الطريقة الثانية: Image element (fallback)
+    return await new Promise(resolve => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth; c.height = img.naturalHeight;
+          c.getContext('2d').drawImage(img, 0, 0);
+          resolve(c.toDataURL('image/jpeg', 0.85));
+        } catch { resolve(null); }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url + (url.includes('?') ? '&' : '?') + '_cb=' + Date.now();
+    });
+  }
 }
 
-async function fetchCol(name){
+// ══════════════════════════════════════════════════════════════
+// تحميل كل الصور مسبقاً مع progress indicator
+// ══════════════════════════════════════════════════════════════
+async function preloadImages(rows) {
+  const map = {};
+  const urlKey = 'رابط الصورة';
+  const urls = [...new Set(rows.map(r => r[urlKey]).filter(Boolean))];
+  if (!urls.length) return map;
+
+  let loaded = 0;
+  showStatus(`⏳ جاري تحميل الصور (0/${urls.length})...`, 'loading');
+
+  await Promise.all(urls.map(async url => {
+    map[url] = await imgToBase64(url);
+    loaded++;
+    showStatus(`⏳ جاري تحميل الصور (${loaded}/${urls.length})...`, 'loading');
+  }));
+
+  const success = Object.values(map).filter(Boolean).length;
+  showStatus(`✅ تم تحميل ${success} من ${urls.length} صورة`, 'loading');
+  return map;
+}
+
+async function fetchCol(name) {
   const snap = await getDocs(collection(db, name));
   return snap.docs.map(doc => {
     const d = doc.data();
     const createdAt = formatDate(d.created_at);
-    if(name === 'missing_children')
-      return { 'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'',
-        'الجنس':d.gender||'','لون البشرة':d.skin||'','المنطقة':d.area||'',
-        'الحي':d.region||'','الوصف':d.description||'','ولي الأمر':d.guardian||'',
-        'رقم الهاتف':d.phone||'','الإيميل':d.email||'','آخر ظهور':d.last_seen||'',
-        'تاريخ الفقدان':d.lost_at||'','تاريخ الإبلاغ':createdAt,'رابط الصورة':d.image_url||'' };
-    return { 'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'',
-      'الجنس':d.gender||'','المنطقة':d.area||'','الحي':d.region||'',
-      'الوصف':d.description||'','مع من الطفل':d.child_with||'',
-      'مكان الاكتشاف':d.found_location||'','الحالة الصحية':d.health||'',
-      'رقم الهاتف':d.phone||'','المُبلِّغ':d.reporter||'',
-      'تاريخ الاكتشاف':d.found_at||'','تاريخ الإبلاغ':createdAt,'رابط الصورة':d.image_url||'' };
-  });
-}
-
-// ────────────────────────────────────────────
-// EXCEL — HYPERLINK formula قابل للضغط فعلاً
-// ────────────────────────────────────────────
-function toExcel(rows, sheet, file){
-  if(!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
-
-  // نسخة معدّلة: نخلي عمود الصورة نص للجدول الأساسي
-  const displayRows = rows.map(r => {
-    const copy = {...r};
-    if(urlIdx >= 0 && copy['رابط الصورة']) copy['رابط الصورة'] = 'فتح الصورة';
-    return copy;
-  });
-
-  const ws = XLSX.utils.json_to_sheet(displayRows);
-
-  // ✅ HYPERLINK formula — الأكيد يشتغل في Excel
-  if(urlIdx >= 0){
-    rows.forEach((row, i) => {
-      const url = row['رابط الصورة'];
-      if(url){
-        const cellAddr = XLSX.utils.encode_cell({r: i+1, c: urlIdx});
-        if(ws[cellAddr]){
-          ws[cellAddr].v = '🖼 فتح الصورة';
-          ws[cellAddr].f = `HYPERLINK("${url}","🖼 فتح الصورة")`;
-          ws[cellAddr].t = 's';
-        }
-      }
-    });
-  }
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, file + '.xlsx');
-}
-
-// ────────────────────────────────────────────
-// WORD — الصورة نفسها تظهر جوه الملف
-// ────────────────────────────────────────────
-async function toWord(rows, title, file){
-  if(!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
-  const colW = Math.floor(9000 / keys.length);
-
-  showStatus('⏳ جاري تحميل الصور للـ Word...', 'loading');
-
-  // ✅ نجيب الصور كـ base64
-  const imgMap = {};
-  for(const row of rows){
-    const url = row['رابط الصورة'];
-    if(url && !imgMap[url]) imgMap[url] = await toBase64(url);
-  }
-
-  const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #a0c080;
-     font-size:12px;text-align:right;width:${colW}px;">${k}</th>`
-  ).join('');
-
-  const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri%2===0?'white':'#f0fff4'};">
-      ${keys.map((k, ci) => {
-        const val = r[k] || '';
-        if(ci === urlIdx && val){
-          const b64 = imgMap[val];
-          if(b64) return `<td style="padding:6px;border:1px solid #ddd;text-align:center;width:${colW}px;">
-            <img src="${b64}" style="max-width:120px;max-height:120px;border-radius:6px;" /></td>`;
-          return `<td style="padding:7px 10px;border:1px solid #ddd;text-align:right;width:${colW}px;">
-            <a href="${val}">🖼 فتح الصورة</a></td>`;
-        }
-        return `<td style="padding:7px 10px;border:1px solid #ccc;text-align:right;
-          word-break:break-word;width:${colW}px;">${val}</td>`;
-      }).join('')}
-    </tr>`
-  ).join('');
-
-  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
-    xmlns:w="urn:schemas-microsoft-com:office:word"
-    xmlns="http://www.w3.org/TR/REC-html40">
-    <head><meta charset="UTF-8">
-    <style>
-      body{font-family:Arial,sans-serif;direction:rtl;}
-      h2{color:#1a6b2a;margin-bottom:8px;}
-      p.sub{color:#c8922a;font-size:11px;margin-bottom:12px;}
-      table{border-collapse:collapse;width:100%;}
-      img{display:block;margin:auto;}
-    </style></head>
-    <body>
-      <h2>Child Link — ${title}</h2>
-      <p class="sub">معاً نبني حياة أفضل لكل طفل</p>
-      <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
-    </body></html>`;
-
-  const blob = new Blob(['﻿' + html], {type:'application/msword'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = file + '.doc';
-  a.click();
-}
-
-// ────────────────────────────────────────────
-// PDF — الصورة نفسها تظهر جوه الملف (html2canvas)
-// ────────────────────────────────────────────
-async function toPDF(rows, title, file){
-  if(!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
-
-  showStatus('⏳ جاري تحميل الصور للـ PDF...', 'loading');
-
-  // ✅ نجيب الصور كـ base64
-  const imgMap = {};
-  for(const row of rows){
-    const url = row['رابط الصورة'];
-    if(url && !imgMap[url]) imgMap[url] = await toBase64(url);
-  }
-
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;direction:rtl;' +
-    'font-family:Cairo,Arial,sans-serif;background:#fff;padding:20px;width:1200px;';
-
-  const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #a0c080;
-     font-size:12px;white-space:nowrap;">${k}</th>`
-  ).join('');
-
-  const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri%2===0?'#fff':'#f0fff4'};">
-      ${keys.map((k, ci) => {
-        const val = r[k] || '';
-        if(ci === urlIdx && val){
-          const b64 = imgMap[val];
-          if(b64) return `<td style="padding:5px;border:1px solid #ddd;text-align:center;">
-            <img src="${b64}" style="max-width:100px;max-height:100px;border-radius:5px;" /></td>`;
-          return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;color:#1a6b2a;">
-            🖼 لا توجد صورة</td>`;
-        }
-        return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;
-          max-width:130px;word-break:break-word;">${val}</td>`;
-      }).join('')}
-    </tr>`
-  ).join('');
-
-  wrapper.innerHTML = `
-    <div style="background:#1a6b2a;color:#fff3a0;padding:14px;text-align:center;
-      border-radius:8px 8px 0 0;">
-      <div style="font-size:20px;font-weight:900;">Child Link — ${title}</div>
-      <div style="font-size:11px;color:#c8e6c9;margin-top:4px;">معاً نبني حياة أفضل لكل طفل</div>
-    </div>
-    <table style="border-collapse:collapse;width:100%;direction:rtl;">
-      <thead><tr>${thead}</tr></thead>
-      <tbody>${tbody}</tbody>
-    </table>`;
-
-  document.body.appendChild(wrapper);
-  await document.fonts.ready;
-
-  const canvas = await html2canvas(wrapper, {scale:2, useCORS:true, allowTaint:true, backgroundColor:'#fff'});
-  document.body.removeChild(wrapper);
-
-  const {jsPDF} = window.jspdf;
-  const imgData = canvas.toDataURL('image/jpeg', 0.92);
-  const imgW = canvas.width, imgH = canvas.height;
-  const pageW = Math.max(297, imgW / 2 * 0.264583);
-  const pageH = imgH / 2 * 0.264583 + 10;
-
-  const doc = new jsPDF({
-    orientation: pageW > pageH ? 'landscape' : 'portrait',
-    unit:'mm', format:[pageW, pageH]
-  });
-  doc.addImage(imgData, 'JPEG', 0, 5, pageW, pageH - 5);
-  doc.save(file + '.pdf');
-}
-
-// ────────────────────────────────────────────
-// MAIN EXPORT
-// ────────────────────────────────────────────
-window.doExport = async function(){
-  const type = window.selectedType, fmt = window.selectedFormat;
-  if(!type || !fmt) return;
-  disableAll(true);
-  showStatus('⏳ جاري تحميل البيانات...', 'loading');
-  try{
-    if(type === 'all'){
-      const m = await fetchCol('missing_children');
-      const f = await fetchCol('found_children');
-      document.getElementById('count').textContent = `مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
-      if(fmt === 'excel'){
-        const wb = XLSX.utils.book_new();
-        // نعمل sheets منفصلة
-        const wsM = XLSX.utils.json_to_sheet(m.map(r=>({...r,'رابط الصورة':'فتح الصورة'})));
-        const wsF = XLSX.utils.json_to_sheet(f.map(r=>({...r,'رابط الصورة':'فتح الصورة'})));
-        // hyperlinks
-        [m,f].forEach((rows, si) => {
-          const ws = si===0 ? wsM : wsF;
-          const keys = Object.keys(rows[0]||{});
-          const urlIdx = keys.indexOf('رابط الصورة');
-          rows.forEach((row,i)=>{
-            const url = row['رابط الصورة'];
-            if(url && urlIdx>=0){
-              const cell = XLSX.utils.encode_cell({r:i+1,c:urlIdx});
-              if(ws[cell]){ ws[cell].v='🖼 فتح الصورة'; ws[cell].f=`HYPERLINK("${url}","🖼 فتح الصورة")`; ws[cell].t='s'; }
-            }
-          });
-        });
-        XLSX.utils.book_append_sheet(wb, wsM, 'مفقودون');
-        XLSX.utils.book_append_sheet(wb, wsF, 'معثور عليهم');
-        XLSX.writeFile(wb, 'child_link_all.xlsx');
-      } else if(fmt === 'word'){
-        await toWord(m, 'الأطفال المفقودين', 'child_link_missing');
-        setTimeout(async () => await toWord(f, 'الأطفال المعثور عليهم', 'child_link_found'), 800);
-      } else {
-        await toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
-        setTimeout(async () => await toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found'), 800);
-      }
-    } else {
-      const rows = await fetchCol(type);
-      document.getElementById('count').textContent = `✅ ${rows.length} سجل`;
-      const isMiss = type === 'missing_children';
-      const title  = isMiss ? 'الأطفال المفقودين' : 'الأطفال المعثور عليهم';
-      const file   = `child_link_${type}`;
-      if(fmt === 'excel')     toExcel(rows, isMiss?'مفقودون':'معثور عليهم', file);
-      else if(fmt === 'word') await toWord(rows, title, file);
-      else                    await toPDF(rows, title, file);
-    }
-    showStatus('✅ تم التحميل بنجاح!', 'success');
-  } catch(e){
-    showStatus('❌ خطأ: ' + e.message, 'error');
-    console.error(e);
-  }
-  disableAll(false);
-  document.getElementById('exportBtn').disabled = false;
-};
-</script>
-
-<!-- Firebase + Export -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-const app = initializeApp({
-  apiKey: "AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
-  authDomain: "child-link-ac4ac.firebaseapp.com",
-  projectId: "child-link-ac4ac",
-  storageBucket: "child-link-ac4ac.firebasestorage.app",
-  messagingSenderId: "79812028626",
-  appId: "1:79812028626:web:0c845a491c9d250282e50b"
-});
-const db = getFirestore(app);
-
-function showStatus(msg, type){
-  const s = document.getElementById('status');
-  s.textContent = msg;
-  s.className = 'status show ' + type;
-}
-
-function disableAll(v){
-  document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b => b.disabled = v);
-}
-
-// ✅ FIX 1: تحويل Firestore Timestamp لتاريخ مقروء
-function formatDate(val) {
-  if (!val) return '';
-  if (typeof val.toDate === 'function') {
-    return val.toDate().toLocaleDateString('ar-EG', {year:'numeric', month:'2-digit', day:'2-digit'});
-  }
-  return String(val);
-}
-
-async function fetchCol(name){
-  const snap = await getDocs(collection(db, name));
-  return snap.docs.map(doc => {
-    const d = doc.data();
-    // ✅ FIX 1: created_at ممكن يكون Timestamp — نحوّله
-    const createdAt = formatDate(d.created_at);
-    if(name === 'missing_children')
+    if (name === 'missing_children')
       return {
         'المعرف': doc.id, 'الاسم': d.name||'', 'العمر': d.age||'',
         'الجنس': d.gender||'', 'لون البشرة': d.skin||'', 'المنطقة': d.area||'',
@@ -691,97 +349,151 @@ async function fetchCol(name){
   });
 }
 
-// ✅ FIX 2: Excel — رابط الصورة كـ hyperlink قابل للضغط
-function toExcel(rows, sheet, file){
-  if(!rows.length){ const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['لا توجد بيانات']]),sheet); XLSX.writeFile(wb,file+'.xlsx'); return; }
+// ══════════════════════════════════════════════════════════════
+// EXCEL — الرابط كنص قابل للنسخ + hyperlink
+// SheetJS لا يدعم روابط Firebase بشكل موثوق بسبب CORS
+// الحل: نكتب الرابط كنص مباشر في الخلية — يعمل دائماً
+// ══════════════════════════════════════════════════════════════
+function toExcel(rows, sheetName, fileName) {
+  if (!rows.length) return;
   const keys = Object.keys(rows[0]);
-  const urlColIdx = keys.indexOf('رابط الصورة');
-  const ws = XLSX.utils.json_to_sheet(rows);
-  // إضافة hyperlink لكل خلية في عمود رابط الصورة
-  if(urlColIdx >= 0){
+  const urlIdx = keys.indexOf('رابط الصورة');
+
+  const ws = XLSX.utils.json_to_sheet(rows.map((r, i) => {
+    const copy = { ...r };
+    // نحتفظ بالرابط الأصلي في الخلية كنص
+    if (urlIdx >= 0) copy['رابط الصورة'] = r['رابط الصورة'] || '';
+    return copy;
+  }));
+
+  // نضيف hyperlink على كل خلية رابط صورة
+  if (urlIdx >= 0) {
     rows.forEach((row, i) => {
       const url = row['رابط الصورة'];
-      if(url){
-        const cellAddr = XLSX.utils.encode_cell({r: i+1, c: urlColIdx});
-        if(ws[cellAddr]){
-          ws[cellAddr].l = { Target: url, Tooltip: 'اضغط لفتح الصورة' };
+      if (url) {
+        const cellAddr = XLSX.utils.encode_cell({ r: i + 1, c: urlIdx });
+        if (ws[cellAddr]) {
+          ws[cellAddr].l = { Target: url };
+          // نجعل النص مختصراً بدل الرابط الطويل
+          ws[cellAddr].v = '🖼 عرض الصورة';
         }
       }
     });
   }
+
+  // تنسيق عرض الأعمدة
+  ws['!cols'] = keys.map(k => ({ wch: k === 'رابط الصورة' ? 20 : 18 }));
+
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheet);
-  XLSX.writeFile(wb, file + '.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, fileName + '.xlsx');
 }
 
-// ✅ FIX 2: Word — رابط الصورة كـ <a href> قابل للضغط
-function toWord(rows, title, file){
-  if(!rows.length) return;
+// ══════════════════════════════════════════════════════════════
+// WORD — الصور مدمجة كـ base64 داخل الملف
+// ══════════════════════════════════════════════════════════════
+async function toWord(rows, title, fileName) {
+  if (!rows.length) return;
   const keys = Object.keys(rows[0]);
+  const urlIdx = keys.indexOf('رابط الصورة');
+  const imgMap = await preloadImages(rows);
+  const colW = Math.floor(8600 / keys.length);
+
   const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`
+    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #4caf50;font-size:12px;text-align:right;min-width:${colW}px;">${k}</th>`
   ).join('');
-  const colW = Math.floor(9000 / keys.length); // عرض تلقائي للأعمدة
+
   const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri%2===0?'white':'#f0fff4'};">${keys.map(k => {
+    `<tr style="background:${ri % 2 === 0 ? '#fff' : '#f0fff4'};">
+    ${keys.map((k, ci) => {
       const val = r[k] || '';
-      if(k === 'رابط الصورة' && val)
-        return `<td style="padding:7px 10px;border:1px solid #ddd;text-align:right;word-break:break-all;width:${colW}px;">
-          <a href="${val}" target="_blank" style="color:#1a6b2a;font-weight:bold;">🖼 فتح الصورة</a>
-        </td>`;
-      return `<td style="padding:7px 10px;border:1px solid #ccc;text-align:right;word-break:break-word;width:${colW}px;">${val}</td>`;
-    }).join('')}</tr>`
+      if (ci === urlIdx) {
+        if (!val) return `<td style="padding:6px;border:1px solid #ddd;text-align:center;min-width:${colW}px;color:#999;">لا توجد صورة</td>`;
+        const b64 = imgMap[val];
+        if (b64) {
+          // صورة مدمجة base64 — تعمل بدون إنترنت
+          return `<td style="padding:5px;border:1px solid #ddd;text-align:center;min-width:${colW}px;">
+            <img src="${b64}" width="120" height="120" style="border-radius:6px;object-fit:cover;display:block;margin:auto;"></td>`;
+        } else {
+          // رابط مباشر كبديل — Word قد يحمّله عند الفتح
+          return `<td style="padding:5px;border:1px solid #ddd;text-align:center;min-width:${colW}px;">
+            <img src="${val}" width="120" height="120" style="border-radius:6px;object-fit:cover;display:block;margin:auto;"
+              onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <span style="display:none;font-size:10px;color:#c0392b;">⚠️ تعذّر تحميل الصورة</span></td>`;
+        }
+      }
+      return `<td style="padding:7px 10px;border:1px solid #ccc;text-align:right;word-break:break-word;min-width:${colW}px;">${val}</td>`;
+    }).join('')}
+    </tr>`
   ).join('');
+
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:w="urn:schemas-microsoft-com:office:word"
     xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="UTF-8">
-    <style>body{font-family:Arial,sans-serif;direction:rtl;}
-    h2{color:#1a6b2a;margin-bottom:16px;}
-    p.sub{color:#c8922a;font-size:12px;margin-bottom:14px;}
-    table{border-collapse:collapse;width:100%;}
-    tr:nth-child(even){background:#f0fff4;}</style></head>
-    <body><h2>Child Link — ${title}</h2>
-    <p class="sub">معاً نبني حياة أفضل لكل طفل</p>
-    <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+    <style>
+      body{font-family:Arial,sans-serif;direction:rtl;}
+      h2{color:#1a6b2a;margin-bottom:6px;}
+      p.sub{color:#c8922a;font-size:11px;margin-bottom:14px;}
+      table{border-collapse:collapse;width:100%;}
+      img{display:block;margin:auto;}
+    </style></head>
+    <body>
+      <h2>Child Link — ${title}</h2>
+      <p class="sub">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</p>
+      <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
     </body></html>`;
-  const blob = new Blob(['\ufeff' + html], {type: 'application/msword'});
+
+  const blob = new Blob(['\uFEFF' + html], { type: 'application/msword' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = file + '.doc';
+  a.download = fileName + '.doc';
   a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
-// ✅ FIX PDF: html2canvas — يصوّر الجدول كصورة فتطلع العربية صح 100%
-async function toPDF(rows, title, file){
-  if(!rows.length) return;
+// ══════════════════════════════════════════════════════════════
+// PDF — الصور مدمجة كـ base64 مع html2canvas
+// ══════════════════════════════════════════════════════════════
+async function toPDF(rows, title, fileName) {
+  if (!rows.length) return;
   const keys = Object.keys(rows[0]);
+  const urlIdx = keys.indexOf('رابط الصورة');
+  const imgMap = await preloadImages(rows);
 
-  // بناء HTML مؤقت للجدول
+  showStatus('⏳ جاري إنشاء ملف PDF...', 'loading');
+
   const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'position:fixed;top:-9999px;left:-9999px;direction:rtl;font-family:Cairo,Arial,sans-serif;background:#fff;padding:20px;width:1100px;';
-
-  const urlColIdx = keys.indexOf('رابط الصورة');
+  wrapper.style.cssText =
+    'position:fixed;top:-99999px;left:-99999px;direction:rtl;' +
+    'font-family:Cairo,Arial,sans-serif;background:#fff;padding:20px;width:1300px;';
 
   const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #a0c080;font-size:12px;white-space:nowrap;">${k}</th>`
+    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #4caf50;font-size:12px;white-space:nowrap;">${k}</th>`
   ).join('');
 
   const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri%2===0?'#fff':'#f0fff4'};">
-      ${keys.map((k, ci) => {
-        const val = r[k] || '';
-        if(ci === urlColIdx && val)
-          return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;"><a href="${val}" style="color:#1a6b2a;font-weight:bold;">🖼 فتح الصورة</a></td>`;
-        return `<td style="padding:7px 10px;border:1px solid #ddd;font-size:11px;max-width:120px;word-break:break-word;">${val}</td>`;
-      }).join('')}
+    `<tr style="background:${ri % 2 === 0 ? '#fff' : '#f0fff4'};">
+    ${keys.map((k, ci) => {
+      const val = r[k] || '';
+      if (ci === urlIdx) {
+        if (!val) return `<td style="padding:5px;border:1px solid #ddd;font-size:11px;text-align:center;color:#999;">لا توجد صورة</td>`;
+        const b64 = imgMap[val];
+        if (b64) {
+          return `<td style="padding:4px;border:1px solid #ddd;text-align:center;">
+            <img src="${b64}" style="width:100px;height:100px;border-radius:5px;object-fit:cover;display:block;margin:auto;"></td>`;
+        }
+        return `<td style="padding:5px;border:1px solid #ddd;font-size:10px;text-align:center;color:#c0392b;">⚠️ لم تُحمَّل الصورة</td>`;
+      }
+      return `<td style="padding:7px 9px;border:1px solid #ddd;font-size:11px;max-width:130px;word-break:break-word;">${val}</td>`;
+    }).join('')}
     </tr>`
   ).join('');
 
   wrapper.innerHTML = `
-    <div style="background:#1a6b2a;color:#fff3a0;padding:12px;text-align:center;border-radius:8px 8px 0 0;margin-bottom:0;">
-      <div style="font-size:18px;font-weight:900;">Child Link — ${title}</div>
-      <div style="font-size:11px;color:#c8e6c9;margin-top:4px;">معاً نبني حياة أفضل لكل طفل</div>
+    <div style="background:#1a6b2a;color:#fff3a0;padding:14px 20px;text-align:center;border-radius:8px 8px 0 0;">
+      <div style="font-size:20px;font-weight:900;">Child Link — ${title}</div>
+      <div style="font-size:11px;color:#c8e6c9;margin-top:4px;">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</div>
     </div>
     <table style="border-collapse:collapse;width:100%;direction:rtl;">
       <thead><tr>${thead}</tr></thead>
@@ -789,50 +501,64 @@ async function toPDF(rows, title, file){
     </table>`;
 
   document.body.appendChild(wrapper);
-
-  // تحميل خط Cairo
   await document.fonts.ready;
+  // انتظار صغير عشان الصور تتعرض في الـ DOM
+  await new Promise(r => setTimeout(r, 300));
 
-  const canvas = await html2canvas(wrapper, {scale:2, useCORS:true, backgroundColor:'#fff'});
+  const canvas = await html2canvas(wrapper, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,   // مهم: يسمح بالصور حتى لو CORS مش مفعّل
+    backgroundColor: '#ffffff',
+    logging: false
+  });
   document.body.removeChild(wrapper);
 
-  const {jsPDF} = window.jspdf;
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const imgW = canvas.width, imgH = canvas.height;
+  const { jsPDF } = window.jspdf;
+  const imgData  = canvas.toDataURL('image/jpeg', 0.92);
+  const canvasW  = canvas.width;
+  const canvasH  = canvas.height;
+  // حساب أبعاد الصفحة بالـ mm
+  const mmPerPx  = 0.264583;
+  const pageW    = Math.max(297, (canvasW / 2) * mmPerPx);
+  const pageH    = (canvasH / 2) * mmPerPx + 10;
 
-  // حجم الصفحة يتكيّف مع عرض الجدول
-  const pageW = Math.max(297, imgW/2 * 0.264583); // mm
-  const pageH = imgH/2 * 0.264583 + 10;
-
-  const doc = new jsPDF({orientation: pageW > pageH ? 'landscape':'portrait', unit:'mm', format:[pageW, pageH]});
-  doc.addImage(imgData,'JPEG', 0, 5, pageW, pageH - 5);
-  doc.save(file + '.pdf');
+  const doc = new jsPDF({
+    orientation: pageW > pageH ? 'landscape' : 'portrait',
+    unit: 'mm',
+    format: [pageW, pageH]
+  });
+  doc.addImage(imgData, 'JPEG', 0, 5, pageW, pageH - 5);
+  doc.save(fileName + '.pdf');
 }
 
-// ✅ FIX: doExport معرّفة على window عشان onclick يلاقيها
-window.doExport = async function(){
-  const type   = window.selectedType;
-  const fmt    = window.selectedFormat;
-  if(!type || !fmt) return;
+// ══════════════════════════════════════════════════════════════
+// MAIN
+// ══════════════════════════════════════════════════════════════
+window.doExport = async function () {
+  const type = window.selectedType;
+  const fmt  = window.selectedFormat;
+  if (!type || !fmt) return;
 
   disableAll(true);
-  showStatus('⏳ جاري تحميل البيانات...', 'loading');
+  showStatus('⏳ جاري تحميل البيانات من قاعدة البيانات...', 'loading');
 
   try {
-    if(type === 'all'){
-      const m = await fetchCol('missing_children');
-      const f = await fetchCol('found_children');
+    if (type === 'all') {
+      const [m, f] = await Promise.all([fetchCol('missing_children'), fetchCol('found_children')]);
       document.getElementById('count').textContent = `مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
-      if(fmt === 'excel'){
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(m), 'مفقودون');
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(f), 'معثور عليهم');
-        XLSX.writeFile(wb, 'child_link_all.xlsx');
-      } else if(fmt === 'word'){
-        toWord(m, 'الأطفال المفقودين', 'child_link_missing');
-        setTimeout(() => toWord(f, 'الأطفال المعثور عليهم', 'child_link_found'), 700);
+
+      if (fmt === 'excel') {
+        toExcel(m, 'مفقودون', 'child_link_missing');
+        await new Promise(r => setTimeout(r, 700));
+        toExcel(f, 'معثور عليهم', 'child_link_found');
+      } else if (fmt === 'word') {
+        await toWord(m, 'الأطفال المفقودين', 'child_link_missing');
+        await new Promise(r => setTimeout(r, 1000));
+        await toWord(f, 'الأطفال المعثور عليهم', 'child_link_found');
       } else {
         await toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
+        await new Promise(r => setTimeout(r, 1000));
         await toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found');
       }
     } else {
@@ -841,13 +567,16 @@ window.doExport = async function(){
       const isMiss = type === 'missing_children';
       const title  = isMiss ? 'الأطفال المفقودين' : 'الأطفال المعثور عليهم';
       const file   = `child_link_${type}`;
-      if(fmt === 'excel')     toExcel(rows, isMiss ? 'مفقودون' : 'معثور عليهم', file);
-      else if(fmt === 'word') toWord(rows, title, file);
-      else                    await toPDF(rows, title, file);
+
+      if      (fmt === 'excel') toExcel(rows, isMiss ? 'مفقودون' : 'معثور عليهم', file);
+      else if (fmt === 'word')  await toWord(rows, title, file);
+      else                      await toPDF(rows, title, file);
     }
+
     showStatus('✅ تم التحميل بنجاح!', 'success');
-  } catch(e){
+  } catch (e) {
     showStatus('❌ خطأ: ' + e.message, 'error');
+    console.error(e);
   }
 
   disableAll(false);
