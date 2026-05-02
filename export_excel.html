@@ -27,28 +27,21 @@ body {
 }
 canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
 
-/* ── Glass Card ── */
 .card {
   position: relative; z-index: 10;
   max-width: 460px; width: 100%;
   text-align: center;
-
   background:
     linear-gradient(145deg,
       rgba(0,230,118,0.04) 0%,
       rgba(255,255,255,0.02) 40%,
       rgba(0,180,80,0.03) 100%),
     rgba(6,20,10,0.78);
-
   backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
   -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
-
   border-radius: 28px;
   padding: 38px 34px 34px;
-
-  /* gold border all around */
   border: 1.5px solid rgba(245,200,66,0.30);
-
   box-shadow:
     0 0 0 1px rgba(245,200,66,0.06),
     0 0 50px rgba(245,200,66,0.05),
@@ -58,7 +51,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
     inset 0 -1px 0 rgba(0,0,0,0.20);
 }
 
-/* top-left shine */
 .card::before {
   content: '';
   position: absolute; inset: 0;
@@ -70,7 +62,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   pointer-events: none;
 }
 
-/* ── Site Name — half green / half gold ── */
 .site-name {
   font-size: 30px; font-weight: 900;
   letter-spacing: 1px; margin-bottom: 6px;
@@ -84,7 +75,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   margin-bottom: 24px;
 }
 
-/* gold divider */
 .divider {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(245,200,66,0.45), transparent);
@@ -97,7 +87,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   margin-bottom: 11px;
 }
 
-/* ── Type Grid ── */
 .type-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   gap: 9px; margin-bottom: 22px;
@@ -131,7 +120,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18);
 }
 
-/* ── Format Grid ── */
 .format-grid {
   display: grid; grid-template-columns: 1fr 1fr 1fr;
   gap: 9px; margin-bottom: 24px;
@@ -165,7 +153,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   color: #ffc0b8; box-shadow: 0 0 20px rgba(200,50,30,0.20);
 }
 
-/* ── Export Button ── */
 .export-btn {
   width: 100%; padding: 16px; border-radius: 14px; border: none;
   font-size: 16px; font-weight: 900; font-family: 'Cairo', sans-serif;
@@ -191,7 +178,6 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
 .export-btn:active  { transform: scale(0.97); }
 .export-btn:disabled { opacity:0.28; cursor:not-allowed; transform:none !important; }
 
-/* ── Status ── */
 .status {
   margin-top:16px; padding:12px 16px; border-radius:12px;
   font-size:14px; font-weight:700; display:none; animation:fadeUp .3s ease;
@@ -245,7 +231,7 @@ canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
   <div class="count"  id="count"></div>
 </div>
 
-<!-- Canvas BG — green hex grid -->
+<!-- Canvas BG -->
 <script>
 const C=document.getElementById('bg'),ctx=C.getContext('2d');
 let W,H;
@@ -316,95 +302,183 @@ function draw(){
 draw();
 </script>
 
-<!-- Selection -->
+<!-- ✅ FIX: استخدام window بدل let عشان الـ module script يشوف المتغيرات -->
 <script>
-let selectedType=null,selectedFormat=null;
-function selectType(btn){
-  document.querySelectorAll('.type-btn').forEach(b=>b.className='type-btn');
-  selectedType=btn.dataset.type;
-  btn.classList.add(selectedType==='missing_children'?'active-missing':selectedType==='found_children'?'active-found':'active-all');
+window.selectedType   = null;
+window.selectedFormat = null;
+
+window.selectType = function(btn){
+  document.querySelectorAll('.type-btn').forEach(b => b.className = 'type-btn');
+  window.selectedType = btn.dataset.type;
+  btn.classList.add(
+    window.selectedType === 'missing_children' ? 'active-missing' :
+    window.selectedType === 'found_children'   ? 'active-found'   : 'active-all'
+  );
   checkReady();
-}
-function selectFormat(btn){
-  document.querySelectorAll('.fmt-btn').forEach(b=>b.className='fmt-btn');
+};
+
+window.selectFormat = function(btn){
+  document.querySelectorAll('.fmt-btn').forEach(b => b.className = 'fmt-btn');
   btn.classList.add('active');
-  selectedFormat=btn.dataset.fmt;
+  window.selectedFormat = btn.dataset.fmt;
   checkReady();
+};
+
+function checkReady(){
+  document.getElementById('exportBtn').disabled = !(window.selectedType && window.selectedFormat);
 }
-function checkReady(){document.getElementById('exportBtn').disabled=!(selectedType&&selectedFormat);}
 </script>
 
 <!-- Firebase + Export -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const app=initializeApp({apiKey:"AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",authDomain:"child-link-ac4ac.firebaseapp.com",projectId:"child-link-ac4ac",storageBucket:"child-link-ac4ac.firebasestorage.app",messagingSenderId:"79812028626",appId:"1:79812028626:web:0c845a491c9d250282e50b"});
-const db=getFirestore(app);
-function showStatus(msg,type){const s=document.getElementById('status');s.textContent=msg;s.className='status show '+type;}
-function disableAll(v){document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b=>b.disabled=v);}
+
+const app = initializeApp({
+  apiKey: "AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
+  authDomain: "child-link-ac4ac.firebaseapp.com",
+  projectId: "child-link-ac4ac",
+  storageBucket: "child-link-ac4ac.firebasestorage.app",
+  messagingSenderId: "79812028626",
+  appId: "1:79812028626:web:0c845a491c9d250282e50b"
+});
+const db = getFirestore(app);
+
+function showStatus(msg, type){
+  const s = document.getElementById('status');
+  s.textContent = msg;
+  s.className = 'status show ' + type;
+}
+
+function disableAll(v){
+  document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b => b.disabled = v);
+}
+
 async function fetchCol(name){
-  const snap=await getDocs(collection(db,name));
-  return snap.docs.map(doc=>{const d=doc.data();
-    if(name==='missing_children')
-      return {'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'','الجنس':d.gender||'','لون البشرة':d.skin||'','المنطقة':d.area||'','الحي':d.region||'','الوصف':d.description||'','ولي الأمر':d.guardian||'','رقم الهاتف':d.phone||'','الإيميل':d.email||'','آخر ظهور':d.last_seen||'','تاريخ الفقدان':d.lost_at||'','تاريخ الإبلاغ':d.created_at||'','رابط الصورة':d.image_url||''};
-    return {'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'','الجنس':d.gender||'','المنطقة':d.area||'','الحي':d.region||'','الوصف':d.description||'','مع من الطفل':d.child_with||'','مكان الاكتشاف':d.found_location||'','الحالة الصحية':d.health||'','رقم الهاتف':d.phone||'','المُبلِّغ':d.reporter||'','تاريخ الاكتشاف':d.found_at||'','تاريخ الإبلاغ':d.created_at||'','رابط الصورة':d.image_url||''};
+  const snap = await getDocs(collection(db, name));
+  return snap.docs.map(doc => {
+    const d = doc.data();
+    if(name === 'missing_children')
+      return {
+        'المعرف': doc.id, 'الاسم': d.name||'', 'العمر': d.age||'',
+        'الجنس': d.gender||'', 'لون البشرة': d.skin||'', 'المنطقة': d.area||'',
+        'الحي': d.region||'', 'الوصف': d.description||'', 'ولي الأمر': d.guardian||'',
+        'رقم الهاتف': d.phone||'', 'الإيميل': d.email||'', 'آخر ظهور': d.last_seen||'',
+        'تاريخ الفقدان': d.lost_at||'', 'تاريخ الإبلاغ': d.created_at||'', 'رابط الصورة': d.image_url||''
+      };
+    return {
+      'المعرف': doc.id, 'الاسم': d.name||'', 'العمر': d.age||'',
+      'الجنس': d.gender||'', 'المنطقة': d.area||'', 'الحي': d.region||'',
+      'الوصف': d.description||'', 'مع من الطفل': d.child_with||'',
+      'مكان الاكتشاف': d.found_location||'', 'الحالة الصحية': d.health||'',
+      'رقم الهاتف': d.phone||'', 'المُبلِّغ': d.reporter||'',
+      'تاريخ الاكتشاف': d.found_at||'', 'تاريخ الإبلاغ': d.created_at||'', 'رابط الصورة': d.image_url||''
+    };
   });
 }
-function toExcel(rows,sheet,file){
-  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,sheet);XLSX.writeFile(wb,file+'.xlsx');
+
+function toExcel(rows, sheet, file){
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheet);
+  XLSX.writeFile(wb, file + '.xlsx');
 }
-function toWord(rows,title,file){
-  if(!rows.length)return;
-  const keys=Object.keys(rows[0]);
-  const thead=keys.map(k=>`<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`).join('');
-  const tbody=rows.map(r=>`<tr>${keys.map(k=>`<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${r[k]||''}</td>`).join('')}</tr>`).join('');
-  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;direction:rtl;}h2{color:#1a6b2a;margin-bottom:16px;}p.sub{color:#c8922a;font-size:12px;margin-bottom:14px;}table{border-collapse:collapse;width:100%;}tr:nth-child(even){background:#f0fff4;}</style></head><body><h2>Child Link — ${title}</h2><p class="sub">معاً نبني حياة أفضل لكل طفل</p><table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></body></html>`;
-  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file+'.doc';a.click();
+
+function toWord(rows, title, file){
+  if(!rows.length) return;
+  const keys = Object.keys(rows[0]);
+  const thead = keys.map(k =>
+    `<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`
+  ).join('');
+  const tbody = rows.map(r =>
+    `<tr>${keys.map(k => `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${r[k]||''}</td>`).join('')}</tr>`
+  ).join('');
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:w="urn:schemas-microsoft-com:office:word"
+    xmlns="http://www.w3.org/TR/REC-html40">
+    <head><meta charset="UTF-8">
+    <style>body{font-family:Arial,sans-serif;direction:rtl;}
+    h2{color:#1a6b2a;margin-bottom:16px;}
+    p.sub{color:#c8922a;font-size:12px;margin-bottom:14px;}
+    table{border-collapse:collapse;width:100%;}
+    tr:nth-child(even){background:#f0fff4;}</style></head>
+    <body><h2>Child Link — ${title}</h2>
+    <p class="sub">معاً نبني حياة أفضل لكل طفل</p>
+    <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+    </body></html>`;
+  const blob = new Blob(['\ufeff' + html], {type: 'application/msword'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = file + '.doc';
+  a.click();
 }
-function toPDF(rows,title,file){
-  if(!rows.length)return;
-  const {jsPDF}=window.jspdf;
-  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const keys=Object.keys(rows[0]);
-  const pw=doc.internal.pageSize.getWidth();
-  doc.setFillColor(26,107,42);doc.rect(0,0,pw,20,'F');
-  doc.setTextColor(255,240,150);doc.setFontSize(13);
-  doc.text(`Child Link — ${title}`,pw/2,13,{align:'center'});
-  doc.setTextColor(200,180,80);doc.setFontSize(7.5);
-  doc.text('معاً نبني حياة أفضل لكل طفل',pw/2,18.5,{align:'center'});
-  doc.autoTable({head:[keys],body:rows.map(r=>keys.map(k=>String(r[k]||''))),startY:24,
-    styles:{fontSize:7,halign:'right',cellPadding:3},
-    headStyles:{fillColor:[26,107,42],textColor:[200,255,200],fontStyle:'bold'},
-    alternateRowStyles:{fillColor:[240,255,244]},margin:{right:10,left:10}});
-  doc.save(file+'.pdf');
+
+function toPDF(rows, title, file){
+  if(!rows.length) return;
+  const {jsPDF} = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  const keys = Object.keys(rows[0]);
+  const pw = doc.internal.pageSize.getWidth();
+  doc.setFillColor(26,107,42); doc.rect(0,0,pw,20,'F');
+  doc.setTextColor(255,240,150); doc.setFontSize(13);
+  doc.text(`Child Link — ${title}`, pw/2, 13, {align:'center'});
+  doc.setTextColor(200,180,80); doc.setFontSize(7.5);
+  doc.text('معاً نبني حياة أفضل لكل طفل', pw/2, 18.5, {align:'center'});
+  doc.autoTable({
+    head: [keys],
+    body: rows.map(r => keys.map(k => String(r[k]||''))),
+    startY: 24,
+    styles: {fontSize:7, halign:'right', cellPadding:3},
+    headStyles: {fillColor:[26,107,42], textColor:[200,255,200], fontStyle:'bold'},
+    alternateRowStyles: {fillColor:[240,255,244]},
+    margin: {right:10, left:10}
+  });
+  doc.save(file + '.pdf');
 }
-window.doExport=async function(){
-  const type=window.selectedType,fmt=window.selectedFormat;
-  if(!type||!fmt)return;
-  disableAll(true);showStatus('⏳ جاري تحميل البيانات...','loading');
-  try{
-    if(type==='all'){
-      const m=await fetchCol('missing_children'),f=await fetchCol('found_children');
-      document.getElementById('count').textContent=`مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
-      if(fmt==='excel'){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(m),'مفقودون');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(f),'معثور عليهم');XLSX.writeFile(wb,'child_link_all.xlsx');}
-      else if(fmt==='word'){toWord(m,'الأطفال المفقودين','child_link_missing');setTimeout(()=>toWord(f,'الأطفال المعثور عليهم','child_link_found'),700);}
-      else{toPDF(m,'الأطفال المفقودين','child_link_missing');setTimeout(()=>toPDF(f,'الأطفال المعثور عليهم','child_link_found'),700);}
+
+// ✅ FIX: doExport معرّفة على window عشان onclick يلاقيها
+window.doExport = async function(){
+  const type   = window.selectedType;
+  const fmt    = window.selectedFormat;
+  if(!type || !fmt) return;
+
+  disableAll(true);
+  showStatus('⏳ جاري تحميل البيانات...', 'loading');
+
+  try {
+    if(type === 'all'){
+      const m = await fetchCol('missing_children');
+      const f = await fetchCol('found_children');
+      document.getElementById('count').textContent = `مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
+      if(fmt === 'excel'){
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(m), 'مفقودون');
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(f), 'معثور عليهم');
+        XLSX.writeFile(wb, 'child_link_all.xlsx');
+      } else if(fmt === 'word'){
+        toWord(m, 'الأطفال المفقودين', 'child_link_missing');
+        setTimeout(() => toWord(f, 'الأطفال المعثور عليهم', 'child_link_found'), 700);
+      } else {
+        toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
+        setTimeout(() => toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found'), 700);
+      }
     } else {
-      const rows=await fetchCol(type);
-      document.getElementById('count').textContent=`✅ ${rows.length} سجل`;
-      const isMiss=type==='missing_children';
-      const title=isMiss?'الأطفال المفقودين':'الأطفال المعثور عليهم';
-      const file=`child_link_${type}`;
-      if(fmt==='excel')toExcel(rows,isMiss?'مفقودون':'معثور عليهم',file);
-      else if(fmt==='word')toWord(rows,title,file);
-      else toPDF(rows,title,file);
+      const rows = await fetchCol(type);
+      document.getElementById('count').textContent = `✅ ${rows.length} سجل`;
+      const isMiss = type === 'missing_children';
+      const title  = isMiss ? 'الأطفال المفقودين' : 'الأطفال المعثور عليهم';
+      const file   = `child_link_${type}`;
+      if(fmt === 'excel')     toExcel(rows, isMiss ? 'مفقودون' : 'معثور عليهم', file);
+      else if(fmt === 'word') toWord(rows, title, file);
+      else                    toPDF(rows, title, file);
     }
-    showStatus('✅ تم التحميل بنجاح!','success');
-  }catch(e){showStatus('❌ خطأ: '+e.message,'error');}
+    showStatus('✅ تم التحميل بنجاح!', 'success');
+  } catch(e){
+    showStatus('❌ خطأ: ' + e.message, 'error');
+  }
+
   disableAll(false);
-  document.getElementById('exportBtn').disabled=false;
+  document.getElementById('exportBtn').disabled = false;
 };
 </script>
 </body>
