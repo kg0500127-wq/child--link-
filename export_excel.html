@@ -354,17 +354,28 @@ function disableAll(v){
   document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b => b.disabled = v);
 }
 
+// ✅ FIX 1: تحويل Firestore Timestamp لتاريخ مقروء
+function formatDate(val) {
+  if (!val) return '';
+  if (typeof val.toDate === 'function') {
+    return val.toDate().toLocaleDateString('ar-EG', {year:'numeric', month:'2-digit', day:'2-digit'});
+  }
+  return String(val);
+}
+
 async function fetchCol(name){
   const snap = await getDocs(collection(db, name));
   return snap.docs.map(doc => {
     const d = doc.data();
+    // ✅ FIX 1: created_at ممكن يكون Timestamp — نحوّله
+    const createdAt = formatDate(d.created_at);
     if(name === 'missing_children')
       return {
         'المعرف': doc.id, 'الاسم': d.name||'', 'العمر': d.age||'',
         'الجنس': d.gender||'', 'لون البشرة': d.skin||'', 'المنطقة': d.area||'',
         'الحي': d.region||'', 'الوصف': d.description||'', 'ولي الأمر': d.guardian||'',
         'رقم الهاتف': d.phone||'', 'الإيميل': d.email||'', 'آخر ظهور': d.last_seen||'',
-        'تاريخ الفقدان': d.lost_at||'', 'تاريخ الإبلاغ': d.created_at||'', 'رابط الصورة': d.image_url||''
+        'تاريخ الفقدان': d.lost_at||'', 'تاريخ الإبلاغ': createdAt, 'رابط الصورة': d.image_url||''
       };
     return {
       'المعرف': doc.id, 'الاسم': d.name||'', 'العمر': d.age||'',
@@ -372,18 +383,35 @@ async function fetchCol(name){
       'الوصف': d.description||'', 'مع من الطفل': d.child_with||'',
       'مكان الاكتشاف': d.found_location||'', 'الحالة الصحية': d.health||'',
       'رقم الهاتف': d.phone||'', 'المُبلِّغ': d.reporter||'',
-      'تاريخ الاكتشاف': d.found_at||'', 'تاريخ الإبلاغ': d.created_at||'', 'رابط الصورة': d.image_url||''
+      'تاريخ الاكتشاف': d.found_at||'', 'تاريخ الإبلاغ': createdAt, 'رابط الصورة': d.image_url||''
     };
   });
 }
 
+// ✅ FIX 2: Excel — رابط الصورة كـ hyperlink قابل للضغط
 function toExcel(rows, sheet, file){
+  if(!rows.length){ const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['لا توجد بيانات']]),sheet); XLSX.writeFile(wb,file+'.xlsx'); return; }
+  const keys = Object.keys(rows[0]);
+  const urlColIdx = keys.indexOf('رابط الصورة');
   const ws = XLSX.utils.json_to_sheet(rows);
+  // إضافة hyperlink لكل خلية في عمود رابط الصورة
+  if(urlColIdx >= 0){
+    rows.forEach((row, i) => {
+      const url = row['رابط الصورة'];
+      if(url){
+        const cellAddr = XLSX.utils.encode_cell({r: i+1, c: urlColIdx});
+        if(ws[cellAddr]){
+          ws[cellAddr].l = { Target: url, Tooltip: 'اضغط لفتح الصورة' };
+        }
+      }
+    });
+  }
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheet);
   XLSX.writeFile(wb, file + '.xlsx');
 }
 
+// ✅ FIX 2: Word — رابط الصورة كـ <a href> قابل للضغط
 function toWord(rows, title, file){
   if(!rows.length) return;
   const keys = Object.keys(rows[0]);
@@ -391,7 +419,14 @@ function toWord(rows, title, file){
     `<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`
   ).join('');
   const tbody = rows.map(r =>
-    `<tr>${keys.map(k => `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${r[k]||''}</td>`).join('')}</tr>`
+    `<tr>${keys.map(k => {
+      const val = r[k] || '';
+      if(k === 'رابط الصورة' && val)
+        return `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">
+          <a href="${val}" target="_blank" style="color:#1a6b2a;font-weight:bold;">🖼 فتح الصورة</a>
+        </td>`;
+      return `<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${val}</td>`;
+    }).join('')}</tr>`
   ).join('');
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:w="urn:schemas-microsoft-com:office:word"
@@ -413,11 +448,13 @@ function toWord(rows, title, file){
   a.click();
 }
 
+// ✅ FIX 2: PDF — رابط الصورة يتحول لـ "فتح الصورة" قابل للضغط
 function toPDF(rows, title, file){
   if(!rows.length) return;
   const {jsPDF} = window.jspdf;
   const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
   const keys = Object.keys(rows[0]);
+  const urlColIdx = keys.indexOf('رابط الصورة');
   const pw = doc.internal.pageSize.getWidth();
   doc.setFillColor(26,107,42); doc.rect(0,0,pw,20,'F');
   doc.setTextColor(255,240,150); doc.setFontSize(13);
@@ -426,12 +463,27 @@ function toPDF(rows, title, file){
   doc.text('معاً نبني حياة أفضل لكل طفل', pw/2, 18.5, {align:'center'});
   doc.autoTable({
     head: [keys],
-    body: rows.map(r => keys.map(k => String(r[k]||''))),
+    body: rows.map(r => keys.map((k, ci) => {
+      if(ci === urlColIdx && r[k]) return '🖼 فتح الصورة';
+      return String(r[k]||'');
+    })),
     startY: 24,
     styles: {fontSize:7, halign:'right', cellPadding:3},
     headStyles: {fillColor:[26,107,42], textColor:[200,255,200], fontStyle:'bold'},
     alternateRowStyles: {fillColor:[240,255,244]},
-    margin: {right:10, left:10}
+    margin: {right:10, left:10},
+    didParseCell: (data) => {
+      if(data.column.index === urlColIdx && data.section === 'body'){
+        const url = rows[data.row.index]?.['رابط الصورة'];
+        if(url) data.cell.styles.textColor = [0, 100, 200];
+      }
+    },
+    didDrawCell: (data) => {
+      if(data.column.index === urlColIdx && data.section === 'body'){
+        const url = rows[data.row.index]?.['رابط الصورة'];
+        if(url) doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, {url});
+      }
+    }
   });
   doc.save(file + '.pdf');
 }
