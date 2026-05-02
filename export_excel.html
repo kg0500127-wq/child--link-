@@ -350,98 +350,191 @@ async function fetchCol(name) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// EXCEL — الرابط كنص قابل للنسخ + hyperlink
-// SheetJS لا يدعم روابط Firebase بشكل موثوق بسبب CORS
-// الحل: نكتب الرابط كنص مباشر في الخلية — يعمل دائماً
+// EXCEL — عمود "الصورة" بـ hyperlink قابل للضغط
+// نغير اسم الهيدر من "رابط الصورة" إلى "الصورة"
+// ونكتب النص كـ "🖼 فتح الصورة" مع رابط مباشر
 // ══════════════════════════════════════════════════════════════
 function toExcel(rows, sheetName, fileName) {
   if (!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
 
-  const ws = XLSX.utils.json_to_sheet(rows.map((r, i) => {
-    const copy = { ...r };
-    // نحتفظ بالرابط الأصلي في الخلية كنص
-    if (urlIdx >= 0) copy['رابط الصورة'] = r['رابط الصورة'] || '';
-    return copy;
-  }));
+  // نعمل نسخة من الـ keys مع تغيير "رابط الصورة" → "الصورة"
+  const origKeys = Object.keys(rows[0]);
+  const displayKeys = origKeys.map(k => k === 'رابط الصورة' ? 'الصورة' : k);
+  const urlOrigIdx  = origKeys.indexOf('رابط الصورة');
 
-  // نضيف hyperlink على كل خلية رابط صورة
-  if (urlIdx >= 0) {
+  // نبني صفوف البيانات بالـ keys الجديدة
+  const displayRows = rows.map(r => {
+    const obj = {};
+    origKeys.forEach((k, i) => {
+      const dk = displayKeys[i];
+      obj[dk] = (k === 'رابط الصورة') ? '' : (r[k] || '');
+    });
+    return obj;
+  });
+
+  const ws = XLSX.utils.json_to_sheet(displayRows, { header: displayKeys });
+
+  // نضيف hyperlink + نص جميل على خلايا عمود الصورة
+  if (urlOrigIdx >= 0) {
     rows.forEach((row, i) => {
       const url = row['رابط الصورة'];
+      const cellAddr = XLSX.utils.encode_cell({ r: i + 1, c: urlOrigIdx });
+      if (!ws[cellAddr]) ws[cellAddr] = { t: 's' };
       if (url) {
-        const cellAddr = XLSX.utils.encode_cell({ r: i + 1, c: urlIdx });
-        if (ws[cellAddr]) {
-          ws[cellAddr].l = { Target: url };
-          // نجعل النص مختصراً بدل الرابط الطويل
-          ws[cellAddr].v = '🖼 عرض الصورة';
-        }
+        ws[cellAddr].v = '🖼 فتح الصورة';
+        ws[cellAddr].t = 's';
+        ws[cellAddr].l = { Target: url, Tooltip: 'اضغط لفتح الصورة' };
+        // تنسيق نص أزرق تحته خط
+        ws[cellAddr].s = {
+          font: { color: { rgb: '0563C1' }, underline: true, bold: false },
+          alignment: { horizontal: 'center', vertical: 'center' }
+        };
+      } else {
+        ws[cellAddr].v = '—';
+        ws[cellAddr].t = 's';
+        ws[cellAddr].s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { color: { rgb: '999999' } } };
       }
     });
   }
 
-  // تنسيق عرض الأعمدة
-  ws['!cols'] = keys.map(k => ({ wch: k === 'رابط الصورة' ? 20 : 18 }));
+  // تنسيق هيدر الجدول — لون أخضر غامق
+  const hdrStyle = {
+    fill: { fgColor: { rgb: '1a6b2a' } },
+    font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 11 },
+    alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
+    border: { bottom: { style: 'thin', color: { rgb: '4caf50' } } }
+  };
+  displayKeys.forEach((k, ci) => {
+    const addr = XLSX.utils.encode_cell({ r: 0, c: ci });
+    if (ws[addr]) ws[addr].s = hdrStyle;
+  });
+
+  // تنسيق الصفوف — تظليل متناوب
+  rows.forEach((row, ri) => {
+    const bg = ri % 2 === 0 ? 'FFFFFF' : 'f0fff4';
+    displayKeys.forEach((k, ci) => {
+      const addr = XLSX.utils.encode_cell({ r: ri + 1, c: ci });
+      if (!ws[addr]) ws[addr] = { t: 's', v: '' };
+      if (!ws[addr].s) ws[addr].s = {};
+      if (!ws[addr].s.fill) ws[addr].s.fill = { fgColor: { rgb: bg } };
+      if (!ws[addr].s.alignment) ws[addr].s.alignment = { vertical: 'center', wrapText: true, readingOrder: 2 };
+      if (!ws[addr].s.border) ws[addr].s.border = {
+        top: { style: 'thin', color: { rgb: 'cccccc' } },
+        bottom: { style: 'thin', color: { rgb: 'cccccc' } },
+        left:  { style: 'thin', color: { rgb: 'cccccc' } },
+        right: { style: 'thin', color: { rgb: 'cccccc' } }
+      };
+    });
+  });
+
+  // عرض الأعمدة
+  ws['!cols'] = displayKeys.map(k => ({ wch: k === 'الصورة' ? 18 : k.length > 10 ? 22 : 16 }));
+  // ارتفاع الصفوف
+  ws['!rows'] = [{ hpt: 22 }, ...rows.map(() => ({ hpt: 20 }))];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, fileName + '.xlsx');
+  // نستخدم bookSST: true + cellStyles: true عشان التنسيق يشتغل
+  XLSX.writeFile(wb, fileName + '.xlsx', { bookSST: false, cellStyles: true });
 }
 
 // ══════════════════════════════════════════════════════════════
-// WORD — الصور مدمجة كـ base64 داخل الملف
+// buildWordTable — جدول HTML مضغوط لـ A4 landscape
 // ══════════════════════════════════════════════════════════════
-async function toWord(rows, title, fileName) {
-  if (!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
-  const imgMap = await preloadImages(rows);
-  const colW = Math.floor(8600 / keys.length);
+function buildWordTable(keys, rows, imgMap, badge) {
+  const urlIdx   = keys.indexOf('رابط الصورة');
+  const dispKeys = keys.map(k => k === 'رابط الصورة' ? 'الصورة' : k);
+  const allDisp  = badge ? ['النوع', ...dispKeys] : dispKeys;
 
-  const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #4caf50;font-size:12px;text-align:right;min-width:${colW}px;">${k}</th>`
+  // عرض ثابت للأعمدة الخاصة
+  function cw(k) {
+    if (k === 'الصورة') return '1.7cm';
+    if (k === 'النوع')  return '1.5cm';
+    if (k === 'الوصف' || k === 'مكان الاكتشاف') return '2.5cm';
+    return '1.8cm';
+  }
+
+  const thead = allDisp.map(k =>
+    `<th style="background:#1a6b2a;color:#fff;padding:3px 4px;border:1px solid #4caf50;font-size:8px;text-align:center;width:${cw(k)};white-space:nowrap;">${k}</th>`
   ).join('');
 
-  const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri % 2 === 0 ? '#fff' : '#f0fff4'};">
-    ${keys.map((k, ci) => {
+  const tbody = rows.map((r, ri) => {
+    const bg = ri % 2 === 0 ? '#ffffff' : '#f0fff4';
+    const dataCells = keys.map((k, ci) => {
       const val = r[k] || '';
-      if (ci === urlIdx) {
-        if (!val) return `<td style="padding:6px;border:1px solid #ddd;text-align:center;min-width:${colW}px;color:#999;">لا توجد صورة</td>`;
+      const dk  = dispKeys[ci];
+      if (dk === 'الصورة') {
+        if (!val) return `<td style="padding:2px;border:1px solid #ddd;text-align:center;width:1.7cm;background:${bg};color:#aaa;font-size:7px;">—</td>`;
         const b64 = imgMap[val];
-        if (b64) {
-          // صورة مدمجة base64 — تعمل بدون إنترنت
-          return `<td style="padding:5px;border:1px solid #ddd;text-align:center;min-width:${colW}px;">
-            <img src="${b64}" width="120" height="120" style="border-radius:6px;object-fit:cover;display:block;margin:auto;"></td>`;
-        } else {
-          // رابط مباشر كبديل — Word قد يحمّله عند الفتح
-          return `<td style="padding:5px;border:1px solid #ddd;text-align:center;min-width:${colW}px;">
-            <img src="${val}" width="120" height="120" style="border-radius:6px;object-fit:cover;display:block;margin:auto;"
-              onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-            <span style="display:none;font-size:10px;color:#c0392b;">⚠️ تعذّر تحميل الصورة</span></td>`;
-        }
+        const img = b64
+          ? `<img src="${b64}" width="50" height="50" style="border-radius:3px;object-fit:cover;display:block;margin:auto;">`
+          : `<img src="${val}" width="50" height="50" style="border-radius:3px;object-fit:cover;display:block;margin:auto;">`;
+        return `<td style="padding:2px;border:1px solid #ddd;text-align:center;width:1.7cm;background:${bg};">${img}</td>`;
       }
-      return `<td style="padding:7px 10px;border:1px solid #ccc;text-align:right;word-break:break-word;min-width:${colW}px;">${val}</td>`;
-    }).join('')}
-    </tr>`
-  ).join('');
+      return `<td style="padding:3px 4px;border:1px solid #ddd;font-size:8px;text-align:right;width:${cw(dk)};background:${bg};vertical-align:middle;word-break:break-word;">${val}</td>`;
+    }).join('');
+
+    const badgeCell = badge
+      ? `<td style="padding:2px;border:1px solid #ddd;text-align:center;width:1.5cm;background:${badge.bg};font-size:7.5px;font-weight:bold;color:${badge.color};vertical-align:middle;">${badge.text}</td>`
+      : '';
+    return `<tr>${badgeCell}${dataCells}</tr>`;
+  }).join('');
+
+  return `<table style="border-collapse:collapse;direction:rtl;margin:0;table-layout:fixed;">
+    <thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// WORD — ملف واحد يحتوي الكل عند "الكل" وإلا ملف واحد
+// ══════════════════════════════════════════════════════════════
+async function toWord(rows, title, fileName, isCombined, missingRows, foundRows) {
+  const allRows = isCombined ? [...(missingRows||[]), ...(foundRows||[])] : (rows||[]);
+  if (!allRows.length) return;
+
+  const imgMap = await preloadImages(allRows);
+  let tableHTML = '';
+
+  if (isCombined) {
+    const mKeys = Object.keys(missingRows[0] || {});
+    const fKeys = Object.keys(foundRows[0]  || {});
+    const mBadge = { text: '🔴 مفقود',     bg: '#fff0f0', color: '#c0392b' };
+    const fBadge = { text: '🟢 تم العثوره', bg: '#f0fff4', color: '#1a7a3a' };
+    const mt = missingRows.length ? buildWordTable(mKeys, missingRows, imgMap, mBadge) : '';
+    const ft = foundRows.length   ? buildWordTable(fKeys, foundRows,   imgMap, fBadge) : '';
+    tableHTML = `
+      <div style="margin-bottom:10px;">
+        <div style="background:#c0392b;color:#fff;padding:5px 10px;font-size:10px;font-weight:bold;border-radius:3px 3px 0 0;">
+          🔴 بلاغات الأطفال المفقودين — ${missingRows.length} بلاغ
+        </div>${mt}
+      </div>
+      <div>
+        <div style="background:#1a7a3a;color:#fff;padding:5px 10px;font-size:10px;font-weight:bold;border-radius:3px 3px 0 0;">
+          🟢 بلاغات الأطفال المعثور عليهم — ${foundRows.length} بلاغ
+        </div>${ft}
+      </div>`;
+  } else {
+    tableHTML = buildWordTable(Object.keys(rows[0]), rows, imgMap, null);
+  }
+
+  const pageTitle = isCombined ? 'بلاغات الموقع الكلية' : title;
+  const total     = isCombined ? `إجمالي البلاغات: ${allRows.length}` : `عدد السجلات: ${allRows.length}`;
 
   const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office"
     xmlns:w="urn:schemas-microsoft-com:office:word"
     xmlns="http://www.w3.org/TR/REC-html40">
     <head><meta charset="UTF-8">
     <style>
-      body{font-family:Arial,sans-serif;direction:rtl;}
-      h2{color:#1a6b2a;margin-bottom:6px;}
-      p.sub{color:#c8922a;font-size:11px;margin-bottom:14px;}
-      table{border-collapse:collapse;width:100%;}
-      img{display:block;margin:auto;}
+      @page { size: A4 landscape; margin: 0.8cm; }
+      body  { font-family:Arial,sans-serif; direction:rtl; margin:0; padding:0; }
+      h2    { color:#1a6b2a; margin-bottom:3px; font-size:13px; }
+      p.sub { color:#c8922a; font-size:8.5px; margin-bottom:8px; }
+      table { border-collapse:collapse; }
+      img   { display:block; margin:auto; }
     </style></head>
     <body>
-      <h2>Child Link — ${title}</h2>
-      <p class="sub">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</p>
-      <table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>
+      <h2>Child Link — ${pageTitle}</h2>
+      <p class="sub">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${total} &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</p>
+      ${tableHTML}
     </body></html>`;
 
   const blob = new Blob(['\uFEFF' + html], { type: 'application/msword' });
@@ -453,82 +546,112 @@ async function toWord(rows, title, fileName) {
 }
 
 // ══════════════════════════════════════════════════════════════
-// PDF — الصور مدمجة كـ base64 مع html2canvas
+// buildPDFTable — جدول HTML لـ html2canvas
 // ══════════════════════════════════════════════════════════════
-async function toPDF(rows, title, fileName) {
-  if (!rows.length) return;
-  const keys = Object.keys(rows[0]);
-  const urlIdx = keys.indexOf('رابط الصورة');
-  const imgMap = await preloadImages(rows);
+function buildPDFTable(keys, rows, imgMap, badge) {
+  const urlIdx   = keys.indexOf('رابط الصورة');
+  const dispKeys = keys.map(k => k === 'رابط الصورة' ? 'الصورة' : k);
+  const allDisp  = badge ? ['النوع', ...dispKeys] : dispKeys;
 
+  const thead = allDisp.map(k => {
+    const w = k === 'الصورة' ? '80px' : k === 'النوع' ? '70px' : k === 'الوصف' ? '110px' : '90px';
+    return `<th style="background:#1a6b2a;color:#fff;padding:5px 6px;border:1px solid #4caf50;font-size:10px;text-align:center;width:${w};white-space:nowrap;">${k}</th>`;
+  }).join('');
+
+  const tbody = rows.map((r, ri) => {
+    const bg = ri % 2 === 0 ? '#fff' : '#f0fff4';
+    const dataCells = keys.map((k, ci) => {
+      const val = r[k] || '';
+      const dk  = dispKeys[ci];
+      if (dk === 'الصورة') {
+        if (!val) return `<td style="padding:3px;border:1px solid #ddd;text-align:center;background:${bg};color:#999;font-size:9px;">—</td>`;
+        const b64 = imgMap[val];
+        if (b64) return `<td style="padding:3px;border:1px solid #ddd;text-align:center;background:${bg};">
+          <img src="${b64}" style="width:60px;height:60px;border-radius:4px;object-fit:cover;display:block;margin:auto;"></td>`;
+        return `<td style="padding:3px;border:1px solid #ddd;text-align:center;background:${bg};color:#c0392b;font-size:9px;">⚠️ لم تُحمَّل</td>`;
+      }
+      return `<td style="padding:4px 5px;border:1px solid #ddd;font-size:10px;background:${bg};vertical-align:middle;word-break:break-word;">${val}</td>`;
+    }).join('');
+
+    const badgeCell = badge
+      ? `<td style="padding:3px;border:1px solid #ddd;text-align:center;background:${badge.bg};font-size:8px;font-weight:bold;color:${badge.color};vertical-align:middle;">${badge.text}</td>`
+      : '';
+    return `<tr>${badgeCell}${dataCells}</tr>`;
+  }).join('');
+
+  return `<table style="border-collapse:collapse;width:100%;direction:rtl;table-layout:auto;">
+    <thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// PDF — صفحة واحدة عريضة أو مجمّعة مع تمييز النوعين
+// ══════════════════════════════════════════════════════════════
+async function toPDF(rows, title, fileName, isCombined, missingRows, foundRows) {
+  const allRows = isCombined ? [...(missingRows||[]), ...(foundRows||[])] : (rows||[]);
+  if (!allRows.length) return;
+
+  const imgMap = await preloadImages(allRows);
   showStatus('⏳ جاري إنشاء ملف PDF...', 'loading');
 
   const wrapper = document.createElement('div');
   wrapper.style.cssText =
     'position:fixed;top:-99999px;left:-99999px;direction:rtl;' +
-    'font-family:Cairo,Arial,sans-serif;background:#fff;padding:20px;width:1300px;';
+    'font-family:Cairo,Arial,sans-serif;background:#fff;padding:16px;width:1400px;';
 
-  const thead = keys.map(k =>
-    `<th style="background:#1a6b2a;color:#fff;padding:8px 10px;border:1px solid #4caf50;font-size:12px;white-space:nowrap;">${k}</th>`
-  ).join('');
+  let bodyHTML = '';
+  if (isCombined) {
+    const mKeys = Object.keys(missingRows[0] || {});
+    const fKeys = Object.keys(foundRows[0]  || {});
+    const mBadge = { text: '🔴 مفقود',     bg: '#fff0f0', color: '#c0392b' };
+    const fBadge = { text: '🟢 تم العثوره', bg: '#f0fff4', color: '#1a7a3a' };
+    const mt = missingRows.length ? buildPDFTable(mKeys, missingRows, imgMap, mBadge) : '';
+    const ft = foundRows.length   ? buildPDFTable(fKeys, foundRows,   imgMap, fBadge) : '';
+    bodyHTML = `
+      <div style="margin-bottom:12px;">
+        <div style="background:#c0392b;color:#fff;padding:6px 12px;font-size:11px;font-weight:900;border-radius:4px 4px 0 0;">
+          🔴 بلاغات الأطفال المفقودين — ${missingRows.length} بلاغ
+        </div>${mt}
+      </div>
+      <div>
+        <div style="background:#1a7a3a;color:#fff;padding:6px 12px;font-size:11px;font-weight:900;border-radius:4px 4px 0 0;">
+          🟢 بلاغات الأطفال المعثور عليهم — ${foundRows.length} بلاغ
+        </div>${ft}
+      </div>`;
+  } else {
+    bodyHTML = buildPDFTable(Object.keys(rows[0]), rows, imgMap, null);
+  }
 
-  const tbody = rows.map((r, ri) =>
-    `<tr style="background:${ri % 2 === 0 ? '#fff' : '#f0fff4'};">
-    ${keys.map((k, ci) => {
-      const val = r[k] || '';
-      if (ci === urlIdx) {
-        if (!val) return `<td style="padding:5px;border:1px solid #ddd;font-size:11px;text-align:center;color:#999;">لا توجد صورة</td>`;
-        const b64 = imgMap[val];
-        if (b64) {
-          return `<td style="padding:4px;border:1px solid #ddd;text-align:center;">
-            <img src="${b64}" style="width:100px;height:100px;border-radius:5px;object-fit:cover;display:block;margin:auto;"></td>`;
-        }
-        return `<td style="padding:5px;border:1px solid #ddd;font-size:10px;text-align:center;color:#c0392b;">⚠️ لم تُحمَّل الصورة</td>`;
-      }
-      return `<td style="padding:7px 9px;border:1px solid #ddd;font-size:11px;max-width:130px;word-break:break-word;">${val}</td>`;
-    }).join('')}
-    </tr>`
-  ).join('');
+  const pageTitle = isCombined ? 'بلاغات الموقع الكلية' : title;
+  const total     = isCombined ? `إجمالي البلاغات: ${allRows.length}` : `عدد السجلات: ${allRows.length}`;
 
   wrapper.innerHTML = `
-    <div style="background:#1a6b2a;color:#fff3a0;padding:14px 20px;text-align:center;border-radius:8px 8px 0 0;">
-      <div style="font-size:20px;font-weight:900;">Child Link — ${title}</div>
-      <div style="font-size:11px;color:#c8e6c9;margin-top:4px;">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</div>
+    <div style="background:#1a6b2a;color:#fff3a0;padding:12px 18px;text-align:center;border-radius:6px 6px 0 0;margin-bottom:0;">
+      <div style="font-size:18px;font-weight:900;">Child Link — ${pageTitle}</div>
+      <div style="font-size:10px;color:#c8e6c9;margin-top:3px;">معاً نبني حياة أفضل لكل طفل &nbsp;|&nbsp; ${total} &nbsp;|&nbsp; ${new Date().toLocaleDateString('ar-EG')}</div>
     </div>
-    <table style="border-collapse:collapse;width:100%;direction:rtl;">
-      <thead><tr>${thead}</tr></thead>
-      <tbody>${tbody}</tbody>
-    </table>`;
+    ${bodyHTML}`;
 
   document.body.appendChild(wrapper);
   await document.fonts.ready;
-  // انتظار صغير عشان الصور تتعرض في الـ DOM
-  await new Promise(r => setTimeout(r, 300));
+  await new Promise(r => setTimeout(r, 400));
 
   const canvas = await html2canvas(wrapper, {
-    scale: 2,
-    useCORS: true,
-    allowTaint: true,   // مهم: يسمح بالصور حتى لو CORS مش مفعّل
-    backgroundColor: '#ffffff',
-    logging: false
+    scale: 2, useCORS: true, allowTaint: true,
+    backgroundColor: '#ffffff', logging: false
   });
   document.body.removeChild(wrapper);
 
   const { jsPDF } = window.jspdf;
-  const imgData  = canvas.toDataURL('image/jpeg', 0.92);
-  const canvasW  = canvas.width;
-  const canvasH  = canvas.height;
-  // حساب أبعاد الصفحة بالـ mm
-  const mmPerPx  = 0.264583;
-  const pageW    = Math.max(297, (canvasW / 2) * mmPerPx);
-  const pageH    = (canvasH / 2) * mmPerPx + 10;
+  const imgData = canvas.toDataURL('image/jpeg', 0.92);
+  const mmPerPx = 0.264583;
+  const pageW   = Math.max(297, (canvas.width  / 2) * mmPerPx);
+  const pageH   = (canvas.height / 2) * mmPerPx + 8;
 
   const doc = new jsPDF({
     orientation: pageW > pageH ? 'landscape' : 'portrait',
-    unit: 'mm',
-    format: [pageW, pageH]
+    unit: 'mm', format: [pageW, pageH]
   });
-  doc.addImage(imgData, 'JPEG', 0, 5, pageW, pageH - 5);
+  doc.addImage(imgData, 'JPEG', 0, 4, pageW, pageH - 4);
   doc.save(fileName + '.pdf');
 }
 
@@ -549,17 +672,16 @@ window.doExport = async function () {
       document.getElementById('count').textContent = `مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
 
       if (fmt === 'excel') {
+        // اكسيل: ملفين منفصلين
         toExcel(m, 'مفقودون', 'child_link_missing');
         await new Promise(r => setTimeout(r, 700));
         toExcel(f, 'معثور عليهم', 'child_link_found');
       } else if (fmt === 'word') {
-        await toWord(m, 'الأطفال المفقودين', 'child_link_missing');
-        await new Promise(r => setTimeout(r, 1000));
-        await toWord(f, 'الأطفال المعثور عليهم', 'child_link_found');
+        // ورد: ملف واحد مجمّع مع تمييز النوعين
+        await toWord(null, null, 'child_link_all', true, m, f);
       } else {
-        await toPDF(m, 'الأطفال المفقودين', 'child_link_missing');
-        await new Promise(r => setTimeout(r, 1000));
-        await toPDF(f, 'الأطفال المعثور عليهم', 'child_link_found');
+        // PDF: ملف واحد مجمّع مع تمييز النوعين
+        await toPDF(null, null, 'child_link_all', true, m, f);
       }
     } else {
       const rows = await fetchCol(type);
@@ -569,8 +691,8 @@ window.doExport = async function () {
       const file   = `child_link_${type}`;
 
       if      (fmt === 'excel') toExcel(rows, isMiss ? 'مفقودون' : 'معثور عليهم', file);
-      else if (fmt === 'word')  await toWord(rows, title, file);
-      else                      await toPDF(rows, title, file);
+      else if (fmt === 'word')  await toWord(rows, title, file, false);
+      else                      await toPDF(rows, title, file, false);
     }
 
     showStatus('✅ تم التحميل بنجاح!', 'success');
