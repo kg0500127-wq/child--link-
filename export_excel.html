@@ -4,186 +4,408 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>تصدير بيانات Child Link</title>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: 'Segoe UI', Tahoma, sans-serif;
-    background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  }
-  .card {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 20px;
-    padding: 40px;
-    max-width: 500px;
-    width: 100%;
-    text-align: center;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-  }
-  .logo { font-size: 50px; margin-bottom: 15px; }
-  h1 { color: #fff; font-size: 24px; margin-bottom: 8px; }
-  p { color: rgba(255,255,255,0.6); margin-bottom: 30px; font-size: 14px; }
-  .btn {
-    display: block;
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    margin-bottom: 12px;
-    transition: all 0.3s;
-    font-family: inherit;
-  }
-  .btn-missing {
-    background: linear-gradient(135deg, #e74c3c, #c0392b);
-    color: white;
-  }
-  .btn-found {
-    background: linear-gradient(135deg, #27ae60, #219a52);
-    color: white;
-  }
-  .btn-all {
-    background: linear-gradient(135deg, #3498db, #2980b9);
-    color: white;
-  }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-  .btn:active { transform: translateY(0); }
-  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-  .status {
-    margin-top: 20px;
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 14px;
-    display: none;
-  }
-  .status.show { display: block; }
-  .status.loading { background: rgba(255,200,0,0.2); color: #ffd700; }
-  .status.success { background: rgba(39,174,96,0.2); color: #2ecc71; }
-  .status.error { background: rgba(231,76,60,0.2); color: #e74c3c; }
-  .count { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 15px; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:   #f5c842;
+  --green:  #00e676;
+  --green2: #69f0ae;
+  --bg:     #040d06;
+  --border: rgba(245,200,66,0.35);
+}
+
+body {
+  font-family: 'Cairo', sans-serif;
+  min-height: 100vh; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; overflow: hidden; position: relative;
+}
+canvas#bg { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+/* ── Glass Card ── */
+.card {
+  position: relative; z-index: 10;
+  max-width: 460px; width: 100%;
+  text-align: center;
+
+  background:
+    linear-gradient(145deg,
+      rgba(0,230,118,0.04) 0%,
+      rgba(255,255,255,0.02) 40%,
+      rgba(0,180,80,0.03) 100%),
+    rgba(6,20,10,0.78);
+
+  backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
+  -webkit-backdrop-filter: blur(40px) saturate(1.8) brightness(1.06);
+
+  border-radius: 28px;
+  padding: 38px 34px 34px;
+
+  /* gold border all around */
+  border: 1.5px solid rgba(245,200,66,0.30);
+
+  box-shadow:
+    0 0 0 1px rgba(245,200,66,0.06),
+    0 0 50px rgba(245,200,66,0.05),
+    0 0 25px rgba(0,230,118,0.04),
+    0 32px 70px rgba(0,0,0,0.68),
+    inset 0 1.5px 0 rgba(245,220,100,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.20);
+}
+
+/* top-left shine */
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: 28px;
+  background: linear-gradient(135deg,
+    rgba(245,200,66,0.05) 0%,
+    rgba(0,230,118,0.03) 50%,
+    transparent 100%);
+  pointer-events: none;
+}
+
+/* ── Site Name — half green / half gold ── */
+.site-name {
+  font-size: 30px; font-weight: 900;
+  letter-spacing: 1px; margin-bottom: 6px;
+}
+.site-name .part-green { color: var(--green); filter: drop-shadow(0 0 12px rgba(0,230,118,0.45)); }
+.site-name .part-gold  { color: var(--gold);  filter: drop-shadow(0 0 12px rgba(245,200,66,0.40)); }
+
+.site-tagline {
+  font-size: 12.5px; letter-spacing: 0.5px;
+  color: rgba(100,200,120,0.50);
+  margin-bottom: 24px;
+}
+
+/* gold divider */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245,200,66,0.45), transparent);
+  margin: 0 0 24px;
+}
+
+.section-label {
+  font-size: 11px; letter-spacing: 1.8px;
+  color: rgba(120,200,130,0.40);
+  margin-bottom: 11px;
+}
+
+/* ── Type Grid ── */
+.type-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 9px; margin-bottom: 22px;
+}
+.type-btn {
+  padding: 13px 6px; border-radius: 13px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  color: rgba(200,220,200,0.45);
+  font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.type-btn .icon { font-size: 20px; }
+.type-btn:hover {
+  background: rgba(0,230,118,0.07);
+  border-color: rgba(0,230,118,0.25);
+  color: #ccc; transform: translateY(-2px);
+}
+.type-btn.active-missing {
+  background: rgba(192,57,43,0.18); border-color: rgba(255,82,82,0.45);
+  color: #ffb3ae; box-shadow: 0 0 20px rgba(192,57,43,0.22);
+}
+.type-btn.active-found {
+  background: rgba(26,122,58,0.18); border-color: rgba(0,230,118,0.45);
+  color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18);
+}
+.type-btn.active-all {
+  background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.50);
+  color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18);
+}
+
+/* ── Format Grid ── */
+.format-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  gap: 9px; margin-bottom: 24px;
+}
+.fmt-btn {
+  padding: 13px 6px; border-radius: 13px;
+  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.03);
+  color: rgba(200,220,200,0.45);
+  font-family: 'Cairo', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(.34,1.56,.64,1);
+  display: flex; flex-direction: column; align-items: center; gap: 7px;
+}
+.fmt-btn .icon { font-size: 22px; }
+.fmt-btn:hover {
+  background: rgba(0,230,118,0.06);
+  border-color: rgba(0,230,118,0.2);
+  color: #ccc; transform: translateY(-2px);
+}
+.fmt-btn[data-fmt="excel"].active {
+  background: rgba(20,130,60,0.18); border-color: rgba(0,230,118,0.50);
+  color: #b8ffcc; box-shadow: 0 0 20px rgba(0,200,80,0.18);
+}
+.fmt-btn[data-fmt="word"].active {
+  background: rgba(245,200,66,0.16); border-color: rgba(245,200,66,0.50);
+  color: #fff3b0; box-shadow: 0 0 20px rgba(245,200,66,0.18);
+}
+.fmt-btn[data-fmt="pdf"].active {
+  background: rgba(200,50,30,0.18); border-color: rgba(255,80,60,0.50);
+  color: #ffc0b8; box-shadow: 0 0 20px rgba(200,50,30,0.20);
+}
+
+/* ── Export Button ── */
+.export-btn {
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  font-size: 16px; font-weight: 900; font-family: 'Cairo', sans-serif;
+  cursor: pointer;
+  background: linear-gradient(135deg, #00b851, #007a35);
+  color: #e0fff0;
+  border: 1px solid rgba(0,230,118,0.28);
+  box-shadow: 0 8px 28px rgba(0,200,80,0.35), inset 0 1px 0 rgba(100,255,140,0.15);
+  position: relative; overflow: hidden;
+  transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+}
+.export-btn::after {
+  content: ''; position: absolute;
+  top:-50%; left:-75%; width:50%; height:200%;
+  background: linear-gradient(100deg, transparent, rgba(255,255,255,0.13), transparent);
+  transform: skewX(-20deg); animation: shimmer 2.8s infinite;
+}
+@keyframes shimmer { 0%{left:-75%} 55%,100%{left:130%} }
+.export-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 14px 38px rgba(0,200,80,0.50);
+}
+.export-btn:active  { transform: scale(0.97); }
+.export-btn:disabled { opacity:0.28; cursor:not-allowed; transform:none !important; }
+
+/* ── Status ── */
+.status {
+  margin-top:16px; padding:12px 16px; border-radius:12px;
+  font-size:14px; font-weight:700; display:none; animation:fadeUp .3s ease;
+}
+.status.show { display:block; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.status.loading { background:rgba(245,200,66,0.10); color:#f5c842; border:1px solid rgba(245,200,66,0.22); }
+.status.success { background:rgba(0,230,118,0.08);  color:#69f0ae; border:1px solid rgba(0,230,118,0.20); }
+.status.error   { background:rgba(255,82,82,0.10);  color:#ff8a80; border:1px solid rgba(255,82,82,0.22); }
+.count { font-size:12px; color:rgba(100,200,130,0.30); margin-top:10px; }
 </style>
 </head>
 <body>
+<canvas id="bg"></canvas>
+
 <div class="card">
-  <div class="logo">📊</div>
-  <h1>تصدير بيانات Child Link</h1>
-  <p>اختار نوع البيانات اللي عايز تحملها Excel</p>
+  <div class="site-name">
+    <span class="part-green">Child</span> <span class="part-gold">Link</span>
+  </div>
+  <div class="site-tagline">معاً نبني حياة أفضل لكل طفل</div>
+  <div class="divider"></div>
 
-  <button class="btn btn-missing" onclick="exportData('missing_children', 'أطفال مفقودون')">
-    🔴 تحميل بيانات الأطفال المفقودين
-  </button>
-  <button class="btn btn-found" onclick="exportData('found_children', 'أطفال تم العثور عليهم')">
-    🟢 تحميل بيانات الأطفال الموجودين
-  </button>
-  <button class="btn btn-all" onclick="exportAll()">
-    🔵 تحميل كل البيانات (ملف واحد)
-  </button>
+  <div class="section-label">① اختار نوع البيانات</div>
+  <div class="type-grid">
+    <button class="type-btn" data-type="missing_children" onclick="selectType(this)">
+      <span class="icon">🔴</span>المفقودين
+    </button>
+    <button class="type-btn" data-type="found_children" onclick="selectType(this)">
+      <span class="icon">🟢</span>المعثور عليهم
+    </button>
+    <button class="type-btn" data-type="all" onclick="selectType(this)">
+      <span class="icon">✨</span>الكل
+    </button>
+  </div>
 
+  <div class="section-label">② اختار صيغة الملف</div>
+  <div class="format-grid">
+    <button class="fmt-btn" data-fmt="excel" onclick="selectFormat(this)">
+      <span class="icon">📊</span>Excel
+    </button>
+    <button class="fmt-btn" data-fmt="word" onclick="selectFormat(this)">
+      <span class="icon">📝</span>Word
+    </button>
+    <button class="fmt-btn" data-fmt="pdf" onclick="selectFormat(this)">
+      <span class="icon">📄</span>PDF
+    </button>
+  </div>
+
+  <button class="export-btn" id="exportBtn" onclick="doExport()" disabled>⬇️ تحميل الملف</button>
   <div class="status" id="status"></div>
-  <div class="count" id="count"></div>
+  <div class="count"  id="count"></div>
 </div>
 
+<!-- Canvas BG — green hex grid -->
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",
-  authDomain: "child-link-ac4ac.firebaseapp.com",
-  projectId: "child-link-ac4ac",
-  storageBucket: "child-link-ac4ac.firebasestorage.app",
-  messagingSenderId: "79812028626",
-  appId: "1:79812028626:web:0c845a491c9d250282e50b"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-function showStatus(msg, type) {
-  const s = document.getElementById('status');
-  s.textContent = msg;
-  s.className = 'status show ' + type;
+const C=document.getElementById('bg'),ctx=C.getContext('2d');
+let W,H;
+function resize(){W=C.width=innerWidth;H=C.height=innerHeight;}
+resize(); window.addEventListener('resize',resize);
+const HS=34,HH=HS*Math.sqrt(3),HW=HS*2;
+let hexes=[];
+function buildGrid(){
+  hexes=[];
+  const cols=Math.ceil(W/(HW*.75))+2,rows=Math.ceil(H/HH)+2;
+  for(let c=-1;c<cols;c++) for(let r=-1;r<rows;r++)
+    hexes.push({x:c*HW*.75,y:r*HH+(c%2===0?0:HH/2),
+      phase:Math.random()*Math.PI*2,speed:.003+Math.random()*.004,kind:Math.random()});
 }
-
-function setCount(msg) {
-  document.getElementById('count').textContent = msg;
+buildGrid(); window.addEventListener('resize',buildGrid);
+function hexPath(x,y,s){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const a=Math.PI/180*(60*i-30);
+    i===0?ctx.moveTo(x+s*Math.cos(a),y+s*Math.sin(a)):ctx.lineTo(x+s*Math.cos(a),y+s*Math.sin(a));}
+  ctx.closePath();
 }
-
-function disableBtns(val) {
-  document.querySelectorAll('.btn').forEach(b => b.disabled = val);
+const pts=Array.from({length:65},()=>({
+  x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+  vx:(Math.random()-.5)*.45,vy:(Math.random()-.5)*.45,
+  r:Math.random()*1.7+.4,alpha:Math.random()*.5+.15,
+  col:Math.random()>.65?'#00e676':Math.random()>.5?'#f5c842':'#ffffff'
+}));
+let scanY=-80;
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#040d06';ctx.fillRect(0,0,W,H);
+  const glow=(cx,cy,r,col)=>{const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);g.addColorStop(0,col);g.addColorStop(1,'transparent');ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();};
+  glow(W*.2,H*.3,340,'rgba(0,160,80,0.07)');
+  glow(W*.8,H*.7,300,'rgba(0,100,60,0.05)');
+  glow(W*.5,H*.5,180,'rgba(245,200,66,0.03)');
+  const t=Date.now();
+  hexes.forEach(h=>{
+    const p=Math.sin(t*h.speed+h.phase);
+    let a,col,sc;
+    if(h.kind>.95){
+      a=.05+p*.04; col=`rgba(245,200,66,${a})`; sc=`rgba(245,200,66,${a*1.8})`;
+    } else if(h.kind>.88){
+      a=.04+p*.04; col=`rgba(0,230,118,${a})`; sc=`rgba(0,230,118,${a*1.8})`;
+    } else if(h.kind>.76){
+      a=.02+p*.015; col=`rgba(0,180,90,${a})`; sc=`rgba(0,180,90,${a*1.5})`;
+    } else {
+      a=.008+p*.005; col=`rgba(0,120,60,${a})`; sc=`rgba(0,120,60,${a*1.2})`;
+    }
+    hexPath(h.x,h.y,HS-1.5);
+    ctx.fillStyle=col;ctx.fill();
+    ctx.strokeStyle=sc;ctx.lineWidth=.5;ctx.stroke();
+  });
+  pts.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=W;if(p.x>W)p.x=0;if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+    ctx.globalAlpha=p.alpha*(0.7+0.3*Math.sin(t*.0012+p.x));
+    ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  scanY+=.6;if(scanY>H+80)scanY=-80;
+  const sg=ctx.createLinearGradient(0,scanY-45,0,scanY+45);
+  sg.addColorStop(0,'rgba(0,230,118,0)');sg.addColorStop(.5,'rgba(0,230,118,0.04)');sg.addColorStop(1,'rgba(0,230,118,0)');
+  ctx.fillStyle=sg;ctx.fillRect(0,scanY-45,W,90);
+  ctx.strokeStyle='rgba(0,230,118,0.10)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,scanY);ctx.lineTo(W,scanY);ctx.stroke();
+  requestAnimationFrame(draw);
 }
+draw();
+</script>
 
-async function fetchCollection(name) {
-  const snap = await db.collection(name).get();
-  return snap.docs.map(doc => {
-    const d = doc.data();
-    return {
-      'المعرف': doc.id,
-      'الاسم': d.name || '',
-      'العمر': d.age || '',
-      'الجنس': d.gender || '',
-      'المنطقة': d.area || '',
-      'الوصف': d.description || '',
-      'ولي الأمر': d.guardian || '',
-      'رقم الهاتف': d.phone || '',
-      'الإيميل': d.email || '',
-      'الحالة الصحية': d.health || '',
-      'ملابس الطفل': d.child_with || '',
-      'مكان الاكتشاف': d.found_location || '',
-      'تاريخ الإبلاغ': d.created_at || '',
-      'تاريخ الاكتشاف': d.found_at || '',
-      'رابط الصورة': d.image_url || '',
-    };
+<!-- Selection -->
+<script>
+let selectedType=null,selectedFormat=null;
+function selectType(btn){
+  document.querySelectorAll('.type-btn').forEach(b=>b.className='type-btn');
+  selectedType=btn.dataset.type;
+  btn.classList.add(selectedType==='missing_children'?'active-missing':selectedType==='found_children'?'active-found':'active-all');
+  checkReady();
+}
+function selectFormat(btn){
+  document.querySelectorAll('.fmt-btn').forEach(b=>b.className='fmt-btn');
+  btn.classList.add('active');
+  selectedFormat=btn.dataset.fmt;
+  checkReady();
+}
+function checkReady(){document.getElementById('exportBtn').disabled=!(selectedType&&selectedFormat);}
+</script>
+
+<!-- Firebase + Export -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyCoU4gnEiWa8lcVCs8IMTHtjYb6XTikiCU",authDomain:"child-link-ac4ac.firebaseapp.com",projectId:"child-link-ac4ac",storageBucket:"child-link-ac4ac.firebasestorage.app",messagingSenderId:"79812028626",appId:"1:79812028626:web:0c845a491c9d250282e50b"});
+const db=getFirestore(app);
+function showStatus(msg,type){const s=document.getElementById('status');s.textContent=msg;s.className='status show '+type;}
+function disableAll(v){document.querySelectorAll('.type-btn,.fmt-btn,#exportBtn').forEach(b=>b.disabled=v);}
+async function fetchCol(name){
+  const snap=await getDocs(collection(db,name));
+  return snap.docs.map(doc=>{const d=doc.data();
+    if(name==='missing_children')
+      return {'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'','الجنس':d.gender||'','لون البشرة':d.skin||'','المنطقة':d.area||'','الحي':d.region||'','الوصف':d.description||'','ولي الأمر':d.guardian||'','رقم الهاتف':d.phone||'','الإيميل':d.email||'','آخر ظهور':d.last_seen||'','تاريخ الفقدان':d.lost_at||'','تاريخ الإبلاغ':d.created_at||'','رابط الصورة':d.image_url||''};
+    return {'المعرف':doc.id,'الاسم':d.name||'','العمر':d.age||'','الجنس':d.gender||'','المنطقة':d.area||'','الحي':d.region||'','الوصف':d.description||'','مع من الطفل':d.child_with||'','مكان الاكتشاف':d.found_location||'','الحالة الصحية':d.health||'','رقم الهاتف':d.phone||'','المُبلِّغ':d.reporter||'','تاريخ الاكتشاف':d.found_at||'','تاريخ الإبلاغ':d.created_at||'','رابط الصورة':d.image_url||''};
   });
 }
-
-async function exportData(collection, sheetName) {
-  disableBtns(true);
-  showStatus('⏳ جاري تحميل البيانات...', 'loading');
-  try {
-    const data = await fetchCollection(collection);
-    setCount(`✅ تم جلب ${data.length} سجل`);
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, sheetName);
-    // Auto column width
-    const cols = Object.keys(data[0] || {}).map(k => ({ wch: Math.max(k.length, 20) }));
-    ws['!cols'] = cols;
-    XLSX.writeFile(wb, `child_link_${collection}_${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.xlsx`);
-    showStatus('✅ تم التحميل بنجاح!', 'success');
-  } catch(e) {
-    showStatus('❌ خطأ: ' + e.message, 'error');
-  }
-  disableBtns(false);
+function toExcel(rows,sheet,file){
+  const ws=XLSX.utils.json_to_sheet(rows);const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,sheet);XLSX.writeFile(wb,file+'.xlsx');
 }
-
-async function exportAll() {
-  disableBtns(true);
-  showStatus('⏳ جاري تحميل كل البيانات...', 'loading');
-  try {
-    const missing = await fetchCollection('missing_children');
-    const found = await fetchCollection('found_children');
-    setCount(`✅ مفقودين: ${missing.length} | موجودين: ${found.length}`);
-    const wb = XLSX.utils.book_new();
-    const ws1 = XLSX.utils.json_to_sheet(missing);
-    const ws2 = XLSX.utils.json_to_sheet(found);
-    XLSX.utils.book_append_sheet(wb, ws1, 'أطفال مفقودون');
-    XLSX.utils.book_append_sheet(wb, ws2, 'أطفال تم العثور عليهم');
-    XLSX.writeFile(wb, `child_link_all_${new Date().toLocaleDateString('ar-EG').replace(/\//g,'-')}.xlsx`);
-    showStatus('✅ تم التحميل بنجاح!', 'success');
-  } catch(e) {
-    showStatus('❌ خطأ: ' + e.message, 'error');
-  }
-  disableBtns(false);
+function toWord(rows,title,file){
+  if(!rows.length)return;
+  const keys=Object.keys(rows[0]);
+  const thead=keys.map(k=>`<th style="background:#1a6b2a;color:#fff;padding:8px 11px;border:1px solid #a0c080;text-align:right;">${k}</th>`).join('');
+  const tbody=rows.map(r=>`<tr>${keys.map(k=>`<td style="padding:7px 11px;border:1px solid #ddd;text-align:right;">${r[k]||''}</td>`).join('')}</tr>`).join('');
+  const html=`<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>body{font-family:Arial,sans-serif;direction:rtl;}h2{color:#1a6b2a;margin-bottom:16px;}p.sub{color:#c8922a;font-size:12px;margin-bottom:14px;}table{border-collapse:collapse;width:100%;}tr:nth-child(even){background:#f0fff4;}</style></head><body><h2>Child Link — ${title}</h2><p class="sub">معاً نبني حياة أفضل لكل طفل</p><table><thead><tr>${thead}</tr></thead><tbody>${tbody}</tbody></table></body></html>`;
+  const blob=new Blob(['\ufeff'+html],{type:'application/msword'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=file+'.doc';a.click();
 }
+function toPDF(rows,title,file){
+  if(!rows.length)return;
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const keys=Object.keys(rows[0]);
+  const pw=doc.internal.pageSize.getWidth();
+  doc.setFillColor(26,107,42);doc.rect(0,0,pw,20,'F');
+  doc.setTextColor(255,240,150);doc.setFontSize(13);
+  doc.text(`Child Link — ${title}`,pw/2,13,{align:'center'});
+  doc.setTextColor(200,180,80);doc.setFontSize(7.5);
+  doc.text('معاً نبني حياة أفضل لكل طفل',pw/2,18.5,{align:'center'});
+  doc.autoTable({head:[keys],body:rows.map(r=>keys.map(k=>String(r[k]||''))),startY:24,
+    styles:{fontSize:7,halign:'right',cellPadding:3},
+    headStyles:{fillColor:[26,107,42],textColor:[200,255,200],fontStyle:'bold'},
+    alternateRowStyles:{fillColor:[240,255,244]},margin:{right:10,left:10}});
+  doc.save(file+'.pdf');
+}
+window.doExport=async function(){
+  const type=window.selectedType,fmt=window.selectedFormat;
+  if(!type||!fmt)return;
+  disableAll(true);showStatus('⏳ جاري تحميل البيانات...','loading');
+  try{
+    if(type==='all'){
+      const m=await fetchCol('missing_children'),f=await fetchCol('found_children');
+      document.getElementById('count').textContent=`مفقودين: ${m.length} | معثور عليهم: ${f.length}`;
+      if(fmt==='excel'){const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(m),'مفقودون');XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(f),'معثور عليهم');XLSX.writeFile(wb,'child_link_all.xlsx');}
+      else if(fmt==='word'){toWord(m,'الأطفال المفقودين','child_link_missing');setTimeout(()=>toWord(f,'الأطفال المعثور عليهم','child_link_found'),700);}
+      else{toPDF(m,'الأطفال المفقودين','child_link_missing');setTimeout(()=>toPDF(f,'الأطفال المعثور عليهم','child_link_found'),700);}
+    } else {
+      const rows=await fetchCol(type);
+      document.getElementById('count').textContent=`✅ ${rows.length} سجل`;
+      const isMiss=type==='missing_children';
+      const title=isMiss?'الأطفال المفقودين':'الأطفال المعثور عليهم';
+      const file=`child_link_${type}`;
+      if(fmt==='excel')toExcel(rows,isMiss?'مفقودون':'معثور عليهم',file);
+      else if(fmt==='word')toWord(rows,title,file);
+      else toPDF(rows,title,file);
+    }
+    showStatus('✅ تم التحميل بنجاح!','success');
+  }catch(e){showStatus('❌ خطأ: '+e.message,'error');}
+  disableAll(false);
+  document.getElementById('exportBtn').disabled=false;
+};
 </script>
 </body>
 </html>
