@@ -1,0 +1,32 @@
+{
+  "name": "Child Link – معاً نعيد الابتسامة",
+  "short_name": "Child Link",
+  "description": "منصة إيجاد الأطفال المفقودين في ٦ أكتوبر",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D3B1E",
+  "theme_color": "#0D3B1E",
+  "orientation": "portrait",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' fill='%230D3B1E' rx='12'/><circle cx='32' cy='14' r='9' fill='%23F9A825'/><line x1='32' y1='23' x2='32' y2='44' stroke='white' stroke-width='5' stroke-linecap='round'/><line x1='16' y1='34' x2='48' y2='34' stroke='white' stroke-width='4' stroke-linecap='round'/><line x1='32' y1='44' x2='18' y2='60' stroke='white' stroke-width='4' stroke-linecap='round'/><line x1='32' y1='44' x2='46' y2='60' stroke='white' stroke-width='4' stroke-linecap='round'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["social", "utilities"],
+  "shortcuts": [
+    {
+      "name": "بلاغ مفقود",
+      "url": "/#report-missing",
+      "description": "أبلغ عن طفل مفقود"
+    },
+    {
+      "name": "بلاغ عثور",
+      "url": "/#report-found",
+      "description": "أبلغ عن طفل معثور عليه"
+    }
+  ]
+}

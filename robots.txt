@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /uploads/
+Disallow: /config/
+Disallow: /app/
+Disallow: /.env
+
+Sitemap: https://childlink.com/sitemap.xml

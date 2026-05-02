@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Child Link — لوحة التحكم</title>
+<meta name="robots" content="noindex, nofollow">
+<style>
+:root {
+  --g1:#0D3B1E; --g2:#1a5c30; --g3:#28a745;
+  --gold:#F9A825; --bg:#f4f6f9; --card:#fff;
+  --text:#1a1a2e; --muted:#6c757d; --red:#dc3545;
+  --border:#e9ecef;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--text); direction:rtl; }
+
+/* ── Sidebar ── */
+.sidebar {
+  position: fixed; right:0; top:0; bottom:0; width:240px;
+  background:var(--g1); color:white; padding:0;
+  display:flex; flex-direction:column; z-index:100;
+}
+.sidebar-logo {
+  padding:24px 20px; border-bottom:1px solid rgba(255,255,255,.1);
+  font-size:1.1rem; font-weight:900; display:flex; align-items:center; gap:10px;
+}
+.sidebar-logo span { color:var(--gold); }
+.sidebar-nav { flex:1; padding:16px 0; }
+.nav-link {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 20px; color:rgba(255,255,255,.75);
+  cursor:pointer; transition:all .2s; border-right:3px solid transparent;
+  font-size:.9rem;
+}
+.nav-link:hover, .nav-link.active {
+  background:rgba(255,255,255,.1); color:white;
+  border-right-color:var(--gold);
+}
+.nav-link .icon { font-size:1.1rem; width:22px; text-align:center; }
+.sidebar-footer {
+  padding:16px 20px; border-top:1px solid rgba(255,255,255,.1);
+  font-size:.8rem; color:rgba(255,255,255,.5);
+}
+
+/* ── Main ── */
+.main { margin-right:240px; padding:24px; min-height:100vh; }
+.topbar {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:28px;
+}
+.page-title { font-size:1.4rem; font-weight:900; color:var(--g1); }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.admin-badge {
+  background:var(--g1); color:white; padding:6px 14px;
+  border-radius:20px; font-size:.8rem; font-weight:700;
+}
+.logout-btn {
+  background:var(--red); color:white; border:none; padding:8px 16px;
+  border-radius:8px; cursor:pointer; font-size:.85rem; font-weight:700;
+}
+
+/* ── Stats Cards ── */
+.stats-grid {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:16px; margin-bottom:28px;
+}
+.stat-card {
+  background:var(--card); border-radius:14px;
+  padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06);
+  display:flex; align-items:center; gap:16px;
+}
+.stat-icon {
+  width:52px; height:52px; border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.5rem;
+}
+.stat-icon.green  { background:#d4edda; }
+.stat-icon.yellow { background:#fff3cd; }
+.stat-icon.blue   { background:#cce5ff; }
+.stat-icon.red    { background:#f8d7da; }
+.stat-num { font-size:1.8rem; font-weight:900; line-height:1; }
+.stat-label { font-size:.8rem; color:var(--muted); margin-top:2px; }
+
+/* ── Table ── */
+.card {
+  background:var(--card); border-radius:14px;
+  box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:20px;
+  overflow:hidden;
+}
+.card-header {
+  padding:16px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.card-title { font-weight:800; font-size:1rem; }
+.card-actions { display:flex; gap:8px; }
+.btn {
+  padding:7px 14px; border-radius:8px; border:none;
+  cursor:pointer; font-size:.82rem; font-weight:700; font-family:inherit;
+}
+.btn-primary { background:var(--g1); color:white; }
+.btn-danger  { background:var(--red); color:white; }
+.btn-success { background:var(--g3); color:white; }
+.btn-sm { padding:4px 10px; font-size:.75rem; }
+table { width:100%; border-collapse:collapse; }
+th { padding:12px 16px; text-align:right; font-size:.8rem; color:var(--muted); background:#f8f9fa; border-bottom:1px solid var(--border); font-weight:700; }
+td { padding:12px 16px; border-bottom:1px solid var(--border); font-size:.85rem; vertical-align:middle; }
+tr:hover td { background:#fafafa; }
+.badge {
+  padding:3px 10px; border-radius:20px; font-size:.73rem; font-weight:700;
+}
+.badge-active  { background:#d4edda; color:#155724; }
+.badge-found   { background:#cce5ff; color:#004085; }
+.badge-closed  { background:#e2e3e5; color:#383d41; }
+.report-img { width:44px; height:44px; border-radius:8px; object-fit:cover; background:#eee; }
+.report-img-placeholder { width:44px; height:44px; border-radius:8px; background:#f0f0f0; display:flex; align-items:center; justify-content:center; font-size:1.2rem; }
+
+/* ── Login ── */
+.login-wrap {
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  background:linear-gradient(135deg,var(--g1),var(--g2));
+}
+.login-card {
+  background:white; border-radius:20px; padding:40px;
+  width:100%; max-width:380px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+  text-align:center;
+}
+.login-logo { font-size:2.5rem; margin-bottom:8px; }
+.login-title { font-size:1.3rem; font-weight:900; color:var(--g1); margin-bottom:4px; }
+.login-sub { font-size:.85rem; color:var(--muted); margin-bottom:28px; }
+.login-input {
+  width:100%; padding:12px 16px; border:1.5px solid var(--border);
+  border-radius:10px; font-size:.95rem; font-family:inherit;
+  margin-bottom:14px; text-align:right; direction:rtl; outline:none;
+  transition:border .2s;
+}
+.login-input:focus { border-color:var(--g3); }
+.login-btn {
+  width:100%; padding:13px; background:var(--g1); color:white;
+  border:none; border-radius:10px; font-size:1rem; font-weight:800;
+  cursor:pointer; font-family:inherit; transition:all .2s;
+}
+.login-btn:hover { background:var(--g2); }
+.login-error { color:var(--red); font-size:.85rem; margin-top:8px; display:none; }
+
+/* ── Section pages ── */
+.section { display:none; }
+.section.active { display:block; }
+</style>
+</head>
+<body>
+
+<!-- ════ LOGIN SCREEN ════ -->
+<div id="loginScreen" class="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">🔐</div>
+    <div class="login-title">Child Link</div>
+    <div class="login-sub">لوحة تحكم المشرف</div>
+    <input class="login-input" type="text" id="adminUser" placeholder="اسم المستخدم" autocomplete="off" style="display:none">
+    <input class="login-input" type="password" id="adminPass" placeholder="Admin Token" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">دخول ←</button>
+    <div class="login-error" id="loginError">❌ بيانات غير صحيحة</div>
+  </div>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div id="dashboard" style="display:none">
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      🧒 <span>Child Link</span> Admin
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-link active" onclick="showSection('overview')" id="nav-overview">
+        <span class="icon">📊</span> نظرة عامة
+      </div>
+      <div class="nav-link" onclick="showSection('missing')" id="nav-missing">
+        <span class="icon">🚨</span> المفقودون
+      </div>
+      <div class="nav-link" onclick="showSection('found')" id="nav-found">
+        <span class="icon">✅</span> المعثور عليهم
+      </div>
+      <div class="nav-link" onclick="showSection('uploads')" id="nav-uploads">
+        <span class="icon">📁</span> الملفات
+      </div>
+    </nav>
+    <div class="sidebar-footer">Child Link Admin v1.0</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">نظرة عامة</div>
+      <div class="topbar-right">
+        <span class="admin-badge">👤 مشرف</span>
+        <button class="logout-btn" onclick="doLogout()">خروج</button>
+      </div>
+    </div>
+
+    <!-- ── OVERVIEW ── -->
+    <div class="section active" id="section-overview">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-icon yellow">🚨</div>
+          <div><div class="stat-num" id="statMissing">—</div><div class="stat-label">مفقودون نشطون</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon green">✅</div>
+          <div><div class="stat-num" id="statFound">—</div><div class="stat-label">معثور عليهم</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon blue">📊</div>
+          <div><div class="stat-num" id="statTotal">—</div><div class="stat-label">إجمالي البلاغات</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon red">📅</div>
+          <div><div class="stat-num" id="statToday">—</div><div class="stat-label">بلاغات اليوم</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🕐 آخر البلاغات</div>
+          <button class="btn btn-primary btn-sm" onclick="loadAll()">🔄 تحديث</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>الاسم</th><th>النوع</th><th>المنطقة</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr>
+          </thead>
+          <tbody id="recentTable"><tr><td colspan="6" style="text-align:center;padding:30px;color:#999">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── MISSING ── -->
+    <div class="section" id="section-missing">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">🚨 قائمة المفقودين</div>
+          <div class="card-actions">
+            <input id="searchMissing" type="text" placeholder="بحث..." style="padding:6px 12px;border:1px solid #ddd;border-radius:8px;font-size:.85rem" oninput="filterTable('missing')">
+            <button class="btn btn-success btn-sm" onclick="exportCSV('missing')">⬇️ تصدير CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>صورة</th><th>الاسم</th><th>العمر</th><th>المنطقة</th><th>ولي الأمر</th><th>التليفون</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="missingTable"><tr><td colspan="9" style="text-align:center;padding:30px;color:#999">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── FOUND ── -->
+    <div class="section" id="section-found">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">✅ قائمة المعثور عليهم</div>
+          <div class="card-actions">
+            <input id="searchFound" type="text" placeholder="بحث..." style="padding:6px 12px;border:1px solid #ddd;border-radius:8px;font-size:.85rem" oninput="filterTable('found')">
+            <button class="btn btn-success btn-sm" onclick="exportCSV('found')">⬇️ تصدير CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>صورة</th><th>الاسم</th><th>العمر</th><th>المنطقة</th><th>المُبلِّغ</th><th>التليفون</th><th>التاريخ</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <tbody id="foundTable"><tr><td colspan="9" style="text-align:center;padding:30px;color:#999">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── UPLOADS ── -->
+    <div class="section" id="section-uploads">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📁 الملفات المرفوعة</div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>اسم الملف</th><th>النوع</th><th>الحجم</th><th>التاريخ</th></tr></thead>
+          <tbody id="uploadsTable"><tr><td colspan="5" style="text-align:center;padding:30px;color:#999">جاري التحميل...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = '';
+
+// BUG FIX: كلمة المرور كانت مكشوفة في الكود — الآن بيتحقق من الـ Admin Token مع السيرفر
+let ADMIN_TOKEN = '';
+let allMissing = [], allFound = [];
+
+async function doLogin() {
+  const token = document.getElementById('adminPass').value.trim();
+  if (!token) {
+    document.getElementById('loginError').style.display = 'block';
+    return;
+  }
+  // BUG FIX: التحقق من التوكن مع السيرفر مش client-side فقط
+  try {
+    const res = await fetch(API + '/api/admin/stats', {
+      headers: { 'X-Admin-Token': token }
+    });
+    if (res.ok) {
+      ADMIN_TOKEN = token;
+      sessionStorage.setItem('adminToken', token);
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadAll();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('adminToken');
+  ADMIN_TOKEN = '';
+  location.reload();
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  const titles = { overview:'نظرة عامة', missing:'المفقودون', found:'المعثور عليهم', uploads:'الملفات' };
+  document.getElementById('pageTitle').textContent = titles[name] || name;
+}
+
+async function loadAll() {
+  try {
+    const [mr, fr] = await Promise.all([
+      fetch(API + '/api/reports/missing').then(r=>r.json()),
+      fetch(API + '/api/reports/found').then(r=>r.json())
+    ]);
+    allMissing = mr.success ? mr.data : [];
+    allFound   = fr.success ? fr.data : [];
+    renderStats();
+    renderRecent();
+    renderMissingTable(allMissing);
+    renderFoundTable(allFound);
+  } catch(e) {
+    console.error('Load error:', e);
+  }
+}
+
+function renderStats() {
+  const today = new Date().toDateString();
+  const todayCount = [...allMissing, ...allFound].filter(r => new Date(r.created_at).toDateString() === today).length;
+  document.getElementById('statMissing').textContent = allMissing.length;
+  document.getElementById('statFound').textContent   = allFound.length;
+  document.getElementById('statTotal').textContent   = allMissing.length + allFound.length;
+  document.getElementById('statToday').textContent   = todayCount;
+}
+
+function renderRecent() {
+  const all = [
+    ...allMissing.map(r => ({...r, _type:'missing'})),
+    ...allFound.map(r => ({...r, _type:'found'}))
+  ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+
+  document.getElementById('recentTable').innerHTML = all.length ? all.map(r => `
+    <tr>
+      <td><strong>${r.name||'—'}</strong></td>
+      <td>${r._type==='missing'?'🚨 مفقود':'✅ معثور'}</td>
+      <td>${r.area||'—'}</td>
+      <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td><span class="badge badge-active">نشط</span></td>
+      <td>
+        <button class="btn btn-success btn-sm" onclick="updateStatus('${r._type}',${r.id},'found')">✅ تم العثور</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReport('${r._type}',${r.id})">🗑️</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="6" style="text-align:center;padding:20px;color:#999">لا توجد بلاغات</td></tr>';
+}
+
+function renderMissingTable(data) {
+  document.getElementById('missingTable').innerHTML = data.length ? data.map(r => `
+    <tr>
+      <td>${r.image_path ? `<img src="${API}/${r.image_path}" class="report-img">` : '<div class="report-img-placeholder">👦</div>'}</td>
+      <td><strong>${r.name||'—'}</strong></td>
+      <td>${r.age||'—'}</td>
+      <td>${r.area||'—'}</td>
+      <td>${r.guardian||'—'}</td>
+      <td dir="ltr">${r.phone||'—'}</td>
+      <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td><span class="badge badge-active">نشط</span></td>
+      <td>
+        <button class="btn btn-success btn-sm" onclick="updateStatus('missing',${r.id},'found')">✅ وُجد</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReport('missing',${r.id})">🗑️</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:#999">لا توجد بلاغات</td></tr>';
+}
+
+function renderFoundTable(data) {
+  document.getElementById('foundTable').innerHTML = data.length ? data.map(r => `
+    <tr>
+      <td>${r.image_path ? `<img src="${API}/${r.image_path}" class="report-img">` : '<div class="report-img-placeholder">👧</div>'}</td>
+      <td><strong>${r.name||'مجهول'}</strong></td>
+      <td>${r.age||'—'}</td>
+      <td>${r.area||'—'}</td>
+      <td>${r.reporter||'—'}</td>
+      <td dir="ltr">${r.phone||'—'}</td>
+      <td>${r.created_at ? new Date(r.created_at).toLocaleDateString('ar-EG') : '—'}</td>
+      <td><span class="badge badge-found">معثور</span></td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteReport('found',${r.id})">🗑️</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="9" style="text-align:center;padding:20px;color:#999">لا توجد بلاغات</td></tr>';
+}
+
+function filterTable(type) {
+  const q = document.getElementById('search' + (type==='missing'?'Missing':'Found')).value.toLowerCase();
+  const data = (type==='missing' ? allMissing : allFound).filter(r =>
+    (r.name||'').toLowerCase().includes(q) || (r.area||'').toLowerCase().includes(q) || (r.phone||'').includes(q)
+  );
+  type === 'missing' ? renderMissingTable(data) : renderFoundTable(data);
+}
+
+async function updateStatus(type, id, status) {
+  if (!confirm('تأكيد تغيير الحالة؟')) return;
+  try {
+    await fetch(`${API}/api/admin/report/${type}/${id}/status`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json', 'X-Admin-Token': ADMIN_TOKEN},
+      body: JSON.stringify({status})
+    });
+    loadAll();
+  } catch(e) { alert('خطأ في التحديث'); }
+}
+
+async function deleteReport(type, id) {
+  if (!confirm('هل أنت متأكد من الحذف؟')) return;
+  try {
+    await fetch(`${API}/api/admin/report/${type}/${id}`, {
+      method: 'DELETE',
+      headers: {'X-Admin-Token': ADMIN_TOKEN}
+    });
+    loadAll();
+  } catch(e) { alert('خطأ في الحذف'); }
+}
+
+function exportCSV(type) {
+  const data = type === 'missing' ? allMissing : allFound;
+  if (!data.length) { alert('لا توجد بيانات'); return; }
+  const headers = type === 'missing'
+    ? ['ID','الاسم','العمر','المنطقة','ولي الأمر','التليفون','التاريخ']
+    : ['ID','الاسم','العمر','المنطقة','المبلغ','التليفون','التاريخ'];
+  const rows = data.map(r => type === 'missing'
+    ? [r.id, r.name, r.age, r.area, r.guardian, r.phone, r.created_at]
+    : [r.id, r.name, r.age, r.area, r.reporter, r.phone, r.created_at]
+  );
+  const csv = '\uFEFF' + [headers, ...rows].map(r => r.map(v => `"${v||''}"`).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv;charset=utf-8'}));
+  a.download = `childlink_${type}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+// Check session
+// BUG FIX: استعادة الـ token من الـ session لو موجود
+const savedToken = sessionStorage.getItem('adminToken');
+if (savedToken) {
+  ADMIN_TOKEN = savedToken;
+  fetch(API + '/api/admin/stats', { headers: { 'X-Admin-Token': savedToken } })
+    .then(r => { if(!r.ok) { sessionStorage.removeItem('adminToken'); location.reload(); } });
+}
+if (savedToken) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  loadAll();
+}
+
+document.getElementById('adminPass').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+</script>
+</body>
+</html>

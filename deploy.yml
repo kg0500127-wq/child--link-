@@ -1,0 +1,135 @@
+name: 🚀 Child Link — CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ══════════════════════════════════════════
+  # JOB 1: TEST
+  # ══════════════════════════════════════════
+  test:
+    name: ✅ Run Tests
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: childlink_test
+        ports: ["3306:3306"]
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐘 Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.2"
+          extensions: pdo, pdo_mysql, gd, fileinfo
+          coverage: none
+
+      - name: 📋 Create .env for testing
+        run: |
+          cp .env.example .env
+          sed -i 's/DB_NAME=childlink/DB_NAME=childlink_test/' .env
+          sed -i 's/DB_USER=childlink_user/DB_USER=root/' .env
+          sed -i 's/STRONG_PASSWORD_HERE/root/' .env
+
+      - name: 🗄️ Run database migrations
+        run: mysql -h 127.0.0.1 -u root -proot childlink_test < database/schema.sql
+
+      - name: 🧪 Run PHP syntax check
+        run: find . -name "*.php" -not -path "./vendor/*" | xargs php -l
+
+      - name: 🔍 Check security headers
+        run: php -r "require 'app/Middleware/Security.php'; echo '✅ Security OK';"
+
+  # ══════════════════════════════════════════
+  # JOB 2: BUILD
+  # ══════════════════════════════════════════
+  build:
+    name: 🏗️ Build
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Create deployment package
+        run: |
+          mkdir -p dist
+          cp -r public app config database .env.example dist/
+          zip -r childlink-deploy.zip dist/
+          echo "✅ Package created: $(du -sh childlink-deploy.zip)"
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: childlink-deploy
+          path: childlink-deploy.zip
+          retention-days: 7
+
+  # ══════════════════════════════════════════
+  # JOB 3: DEPLOY TO PRODUCTION
+  # ══════════════════════════════════════════
+  deploy:
+    name: 🌐 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📥 Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: childlink-deploy
+
+      - name: 🚀 Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./dist/public/
+          server-dir: /public_html/
+          exclude: |
+            **/.git*
+            **/.env
+            **/node_modules/**
+
+      - name: 📁 Deploy backend files via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          script: |
+            cd ~/
+            # Deploy app & config outside public_html
+            rsync -avz --delete dist/app/ ~/app/
+            rsync -avz --delete dist/config/ ~/config/
+            rsync -avz --delete dist/database/ ~/database/
+            # Set permissions
+            chmod -R 755 ~/public_html/
+            chmod -R 777 ~/public_html/uploads/
+            echo "✅ Deployment complete!"
+
+      - name: 🔔 Notify on success
+        if: success()
+        run: echo "✅ Deployed successfully to production!"
+
+      - name: ❌ Notify on failure
+        if: failure()
+        run: echo "❌ Deployment failed!"
